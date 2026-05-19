@@ -300,22 +300,15 @@ const LimitUpPage: React.FC = () => {
                       <td className="py-3 px-2 text-secondary max-w-xs truncate" title={stock.reason}>
                         {stock.reason || '-'}
                       </td>
-                      <td className="py-3 px-2 text-secondary max-w-xs">
-                        <div className="relative">
+                      <td className="py-3 px-2 text-secondary max-w-xs" onDoubleClick={() => toggleDetail(stock.code)} title="双击展开详情">
+                        <div className="relative cursor-pointer">
                           {(stock.detail_reason?.length || 0) > 50 ? (
                             <>
                               <div className="truncate text-sm" title={stock.detail_reason}>
                                 {stock.detail_reason?.slice(0, 50)}...
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => toggleDetail(stock.code)}
-                                className="mt-1 text-sm text-primary hover:text-primary/80 hover:text-sm"
-                              >
-                                {expandedDetails[stock.code] ? '收起' : '展开'}
-                              </button>
                               {expandedDetails[stock.code] && (
-                                <div className="mt-2 p-2 bg-secondary/10 rounded text-sm whitespace-pre-wrap hover:text-sm">
+                                <div className="mt-2 p-2 bg-secondary/10 rounded text-sm whitespace-pre-wrap">
                                   {stock.detail_reason}
                                 </div>
                               )}

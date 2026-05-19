@@ -90,7 +90,8 @@ def get_limit_up_data(
         sort_key = field_mapping[sort_field]
         reverse = sort_order.lower() == 'desc'
         
-        results.sort(key=lambda x: getattr(x, sort_key) or 0, reverse=reverse)
+        # 使用正确的排序逻辑，确保获取实际值
+        results.sort(key=lambda x: (getattr(x, sort_key) or 0), reverse=reverse)
         
         # 计算分页
         total_count = len(results)

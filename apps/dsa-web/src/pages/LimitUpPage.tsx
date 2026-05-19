@@ -206,7 +206,7 @@ const LimitUpPage: React.FC = () => {
               />
             ) : (
               <table className="w-full text-sm">
-                <thead className="text-xs text-secondary border-b border-white/10">
+                <thead className="text-sm text-secondary border-b border-white/10">
                   <tr>
                     <th className="text-left py-3 px-2">代码</th>
                     <th className="text-left py-3 px-2">名称</th>
@@ -216,7 +216,7 @@ const LimitUpPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleSort('turnover_rate')}
-                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors"
+                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors w-full"
                       >
                         换手率
                         {sortField === 'turnover_rate' && (
@@ -228,7 +228,7 @@ const LimitUpPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleSort('volume')}
-                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors"
+                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors w-full"
                       >
                         成交量
                         {sortField === 'volume' && (
@@ -240,7 +240,7 @@ const LimitUpPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleSort('amount')}
-                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors"
+                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors w-full"
                       >
                         成交额(万)
                         {sortField === 'amount' && (
@@ -252,7 +252,7 @@ const LimitUpPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleSort('change_pct')}
-                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors"
+                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors w-full"
                       >
                         涨跌幅
                         {sortField === 'change_pct' && (

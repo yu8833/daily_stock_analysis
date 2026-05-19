@@ -36,29 +36,31 @@ def get_limit_up_data(
     page: int = Query(1, ge=1, description="页码，从1开始"),
     page_size: int = Query(20, ge=1, le=100, description="每页条数"),
     sort_field: str = Query("change_pct", description="排序字段：turnover_rate/volume/amount/change_pct"),
-    sort_order: str = Query("desc", description="排序方式：asc/desc")
+    sort_order: str = Query("desc", description="排序方式：asc/desc"),
+    keyword: Optional[str] = Query(None, description="关键字搜索，匹配代码/名称/原因/详因")
 ):
     """
     获取涨停数据
-    
+
     获取指定日期的涨停股票数据，数据来源于同花顺 API，支持数据库缓存
-    
+
     Args:
         date: 日期（YYYY-MM-DD），默认当天
         page: 页码，从1开始
         page_size: 每页条数，最大100条
         sort_field: 排序字段，支持 turnover_rate/volume/amount/change_pct
         sort_order: 排序方式，asc（升序）或 desc（降序）
-        
+        keyword: 关键字搜索，匹配代码/名称/原因/详因
+
     Returns:
         包含日期、分页信息和股票列表的字典
-        
+
     Raises:
         HTTPException: 500 - 获取数据失败
     """
     try:
         repo = LimitUpRepository()
-        
+
         # 使用指定日期或默认当天
         if date:
             try:
@@ -70,10 +72,26 @@ def get_limit_up_data(
                 )
         else:
             query_date = date.today()
-        
+
         # 获取数据（优先从数据库，不存在则从数据源获取）
         results = repo.get_or_fetch(query_date)
-        
+
+        # 关键字过滤
+        if keyword and keyword.strip():
+            keyword_lower = keyword.lower().strip()
+            filtered_results = []
+            for item in results:
+                code = str(item.code or '').lower()
+                name = str(item.name or '').lower()
+                title = str(item.title or '').lower()
+                reason = str(item.reason or '').lower()
+                if (keyword_lower in code or
+                    keyword_lower in name or
+                    keyword_lower in title or
+                    keyword_lower in reason):
+                    filtered_results.append(item)
+            results = filtered_results
+
         # 排序字段映射
         field_mapping = {
             'turnover_rate': 'turnoverrate',

@@ -75,6 +75,9 @@ const LimitUpPage: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('change_pct');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
+  // 搜索状态
+  const [searchKeyword, setSearchKeyword] = useState('');
+
   const toggleDetail = (code: string) => {
     setExpandedDetails(prev => ({
       ...prev,
@@ -97,7 +100,17 @@ const LimitUpPage: React.FC = () => {
     setError(null);
 
     try {
-      const url = `/api/v1/limitup/?date=${selectedDate}&page=${currentPage}&page_size=${pageSize}&sort_field=${sortField}&sort_order=${sortOrder}`;
+      const params = new URLSearchParams({
+        date: selectedDate,
+        page: String(currentPage),
+        page_size: String(pageSize),
+        sort_field: sortField,
+        sort_order: sortOrder,
+      });
+      if (searchKeyword.trim()) {
+        params.append('keyword', searchKeyword.trim());
+      }
+      const url = `/api/v1/limitup/?${params.toString()}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -129,7 +142,7 @@ const LimitUpPage: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
     void fetchLimitUpData();
-  }, [selectedDate, pageSize]);
+  }, [selectedDate, pageSize, searchKeyword]);
 
   useEffect(() => {
     void fetchLimitUpData();
@@ -163,7 +176,7 @@ const LimitUpPage: React.FC = () => {
 
         <Card padding="md">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <label className="text-sm text-secondary">选择日期</label>
               <input
                 type="date"
@@ -172,6 +185,23 @@ const LimitUpPage: React.FC = () => {
                 className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none"
                 max={getTodayIso()}
               />
+              <label className="text-sm text-secondary">关键字</label>
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="代码/名称/原因..."
+                className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none w-40"
+              />
+              {searchKeyword && (
+                <button
+                  type="button"
+                  onClick={() => setSearchKeyword('')}
+                  className="text-xs text-secondary hover:text-primary"
+                >
+                  清除
+                </button>
+              )}
             </div>
             <Badge variant="success">{totalCount} 只涨停</Badge>
           </div>

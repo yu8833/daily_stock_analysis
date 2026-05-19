@@ -20,6 +20,7 @@ import asyncio
 import json
 import logging
 import re
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union, Dict, Any
@@ -116,6 +117,7 @@ def _run_market_review_background(
     override_region: Optional[str] = None,
     lock_token: Optional[_MarketReviewExecutionLock] = None,
     config: Optional[Config] = None,
+    query_id: Optional[str] = None,
 ) -> None:
     """Run market review after the API response has been accepted."""
     from src.core.market_review import run_market_review
@@ -123,13 +125,16 @@ def _run_market_review_background(
     runtime_config = config or get_config_dep()
     try:
         notifier, analyzer, search_service = _build_market_review_runtime(runtime_config)
-        report = run_market_review(
-            notifier=notifier,
-            analyzer=analyzer,
-            search_service=search_service,
-            send_notification=send_notification,
-            override_region=override_region,
-        )
+        review_kwargs = {
+            "notifier": notifier,
+            "analyzer": analyzer,
+            "search_service": search_service,
+            "send_notification": send_notification,
+            "override_region": override_region,
+        }
+        if query_id:
+            review_kwargs["query_id"] = query_id
+        report = run_market_review(**review_kwargs)
         if not report:
             raise RuntimeError("大盘复盘未返回可持久化报告")
         return {"result": report}
@@ -319,6 +324,7 @@ def _handle_async_analysis_batch(
     original_query = request.original_query if (is_single or preserve_batch_metadata) else None
     selection_source = request.selection_source if (is_single or preserve_batch_metadata) else None
     notify = getattr(request, "notify", True)
+    skills = getattr(request, "skills", None)
 
     submit_kwargs = dict(
         stock_codes=stock_codes,
@@ -329,6 +335,8 @@ def _handle_async_analysis_batch(
         force_refresh=request.force_refresh,
         notify=notify,
     )
+    if skills is not None:
+        submit_kwargs["skills"] = skills
 
     accepted_tasks, duplicate_errors = task_queue.submit_tasks_batch(**submit_kwargs)
 
@@ -410,6 +418,7 @@ def _handle_sync_analysis(
             force_refresh=request.force_refresh,
             query_id=query_id,
             send_notification=getattr(request, "notify", True),
+            skills=getattr(request, "skills", None),
         )
 
         if result is None:
@@ -500,16 +509,19 @@ def trigger_market_review(
         )
 
     try:
+        task_id = uuid.uuid4().hex
         task = get_task_queue().submit_background_task(
             lambda: _run_market_review_background(
                 request.send_notification,
                 override_region=override_region,
                 lock_token=lock_token,
                 config=config,
+                query_id=task_id,
             ),
             stock_code="market_review",
             stock_name="大盘复盘",
             message="大盘复盘任务已提交",
+            task_id=task_id,
         )
     except Exception:
         _release_market_review_lock(lock_token)
@@ -740,6 +752,7 @@ def get_analysis_status(task_id: str) -> TaskStatus:
             stock_name=task.stock_name,
             original_query=task.original_query,
             selection_source=task.selection_source,
+            skills=getattr(task, "skills", None),
         )
     
     # 2. 从数据库查询已完成的记录
@@ -751,6 +764,25 @@ def get_analysis_status(task_id: str) -> TaskStatus:
         if records:
             record = records[0]
             raw_result = parse_json_field(record.raw_result)
+            if getattr(record, "report_type", None) == "market_review":
+                market_review_report = None
+                if isinstance(raw_result, dict):
+                    report_text = raw_result.get("raw_response") or raw_result.get("market_review_report")
+                    if isinstance(report_text, str) and report_text.strip():
+                        market_review_report = report_text
+                if not market_review_report and record.news_content:
+                    market_review_report = record.news_content
+
+                return TaskStatus(
+                    task_id=task_id,
+                    status="completed",
+                    progress=100,
+                    result=None,
+                    market_review_report=market_review_report,
+                    error=None,
+                    stock_name=record.name,
+                )
+
             model_used = normalize_model_used(
                 (raw_result or {}).get("model_used") if isinstance(raw_result, dict) else None
             )
@@ -762,8 +794,12 @@ def get_analysis_status(task_id: str) -> TaskStatus:
             # Extract current_price / change_pct from context_snapshot
             current_price = None
             change_pct = None
+            skills = None
             context_snapshot = parse_json_field(getattr(record, 'context_snapshot', None))
             if context_snapshot and isinstance(context_snapshot, dict):
+                raw_skills = context_snapshot.get("skills")
+                if isinstance(raw_skills, list):
+                    skills = [str(skill) for skill in raw_skills]
                 enhanced_context = context_snapshot.get('enhanced_context') or {}
                 realtime = enhanced_context.get('realtime') or {}
                 current_price = realtime.get('price')
@@ -797,10 +833,10 @@ def get_analysis_status(task_id: str) -> TaskStatus:
                     analysis_summary=record.analysis_summary,
                 ),
                 strategy=ReportStrategy(
-                    ideal_buy=str(getattr(record, 'ideal_buy', None)) if getattr(record, 'ideal_buy', None) is not None else None,
-                    secondary_buy=str(getattr(record, 'secondary_buy', None)) if getattr(record, 'secondary_buy', None) is not None else None,
-                    stop_loss=str(getattr(record, 'stop_loss', None)) if getattr(record, 'stop_loss', None) is not None else None,
-                    take_profit=str(getattr(record, 'take_profit', None)) if getattr(record, 'take_profit', None) is not None else None,
+                    ideal_buy=_stringify_report_strategy_value(getattr(record, 'ideal_buy', None)),
+                    secondary_buy=_stringify_report_strategy_value(getattr(record, 'secondary_buy', None)),
+                    stop_loss=_stringify_report_strategy_value(getattr(record, 'stop_loss', None)),
+                    take_profit=_stringify_report_strategy_value(getattr(record, 'take_profit', None)),
                 ),
             ).model_dump()
             return TaskStatus(
@@ -814,7 +850,8 @@ def get_analysis_status(task_id: str) -> TaskStatus:
                     report=report_dict,
                     created_at=record.created_at.isoformat() if record.created_at else datetime.now().isoformat()
                 ),
-                error=None
+                error=None,
+                skills=skills,
             )
 
     except Exception as e:
@@ -870,6 +907,14 @@ def _load_sync_fundamental_sources(
             e,
         )
         return None, None
+
+
+def _stringify_report_strategy_value(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    return str(value)
 
 
 def _build_analysis_report(
@@ -932,10 +977,10 @@ def _build_analysis_report(
     strategy = None
     if strategy_data:
         strategy = ReportStrategy(
-            ideal_buy=strategy_data.get("ideal_buy"),
-            secondary_buy=strategy_data.get("secondary_buy"),
-            stop_loss=strategy_data.get("stop_loss"),
-            take_profit=strategy_data.get("take_profit")
+            ideal_buy=_stringify_report_strategy_value(strategy_data.get("ideal_buy")),
+            secondary_buy=_stringify_report_strategy_value(strategy_data.get("secondary_buy")),
+            stop_loss=_stringify_report_strategy_value(strategy_data.get("stop_loss")),
+            take_profit=_stringify_report_strategy_value(strategy_data.get("take_profit"))
         )
 
     extracted_fundamental = extract_fundamental_detail_fields(

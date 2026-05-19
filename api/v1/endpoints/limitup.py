@@ -19,6 +19,19 @@ from src.repositories.limitup_repo import LimitUpRepository
 
 logger = logging.getLogger(__name__)
 
+
+def is_trading_day(check_date: date) -> bool:
+    """
+    检查是否为交易日（中国A股）
+
+    Args:
+        check_date: 要检查的日期
+
+    Returns:
+        是否为交易日（周一到周五返回True，周六周日返回False）
+    """
+    return check_date.weekday() < 5
+
 router = APIRouter()
 
 
@@ -72,6 +85,19 @@ def get_limit_up_data(
                 )
         else:
             query_date = date.today()
+
+        # 检查是否为交易日（非交易日返回空数据）
+        if not is_trading_day(query_date):
+            return {
+                "date": query_date.strftime('%Y-%m-%d'),
+                "count": 0,
+                "total_pages": 0,
+                "current_page": 1,
+                "page_size": page_size,
+                "data": [],
+                "is_trading_day": False,
+                "message": f"{query_date.strftime('%Y-%m-%d')} 是非交易日（周末或节假日），暂无涨停数据"
+            }
 
         # 获取数据（优先从数据库，不存在则从数据源获取）
         results = repo.get_or_fetch(query_date)

@@ -29,6 +29,8 @@ interface LimitUpResponse {
   current_page: number;
   page_size: number;
   data: LimitUpStock[];
+  message?: string;
+  is_trading_day?: boolean;
 }
 
 function getTodayIso(): string {
@@ -78,6 +80,9 @@ const LimitUpPage: React.FC = () => {
   // 搜索状态
   const [searchKeyword, setSearchKeyword] = useState('');
 
+  // 提示信息状态
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+
   const toggleDetail = (code: string) => {
     setExpandedDetails(prev => ({
       ...prev,
@@ -123,10 +128,12 @@ const LimitUpPage: React.FC = () => {
         setStockList(result.data);
         setTotalCount(result.count);
         setTotalPages(result.total_pages);
+        setNoticeMessage(result.message || null);
       } else {
         setStockList([]);
         setTotalCount(0);
         setTotalPages(0);
+        setNoticeMessage(result.message || null);
       }
     } catch (err) {
       console.error('获取涨停数据失败:', err);
@@ -231,7 +238,7 @@ const LimitUpPage: React.FC = () => {
             ) : stockList.length === 0 ? (
               <EmptyState
                 title="暂无涨停数据"
-                description={`${selectedDate} 当日没有涨停股票数据，或数据源暂时不可用。`}
+                description={noticeMessage || `${selectedDate} 当日没有涨停股票数据，或数据源暂时不可用。`}
                 className="border-none bg-transparent px-4 py-8 shadow-none"
               />
             ) : (

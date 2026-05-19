@@ -721,6 +721,65 @@ class AlertCooldownRecord(Base):
     )
 
 
+class StockLimitupReason(Base):
+    """
+    涨停原因数据模型
+    
+    存储每日涨停股票的原因分析数据，来源于同花顺 API
+    """
+    __tablename__ = 'stock_limitup_reason'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # 基本信息
+    date = Column(Date, nullable=False, index=True)  # 日期
+    code = Column(String(10), nullable=False, index=True)  # 股票代码
+    name = Column(String(50))  # 股票名称
+    
+    # 涨停原因
+    title = Column(String(255))  # 原因（简短）
+    reason = Column(Text)  # 详因（详细）
+    
+    # 行情数据
+    new_price = Column(Float)  # 最新价
+    change_rate = Column(Float)  # 涨跌幅（%）
+    ups_downs = Column(Float)  # 涨跌额
+    turnoverrate = Column(Float)  # 换手率（%）
+    volume = Column(Float)  # 成交量（手）
+    deal_amount = Column(Float)  # 成交额（万元）
+    dde = Column(Float)  # DDE
+    
+    # 更新时间
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # 唯一约束：同一股票同一日期只能有一条数据
+    __table_args__ = (
+        UniqueConstraint('code', 'date', name='uix_limitup_code_date'),
+        Index('ix_limitup_date', 'date'),
+    )
+    
+    def __repr__(self):
+        return f"<StockLimitupReason(code={self.code}, date={self.date}, name={self.name})>"
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典"""
+        return {
+            'code': self.code,
+            'name': self.name,
+            'date': self.date.isoformat() if self.date else None,
+            'title': self.title,
+            'reason': self.reason,
+            'new_price': self.new_price,
+            'change_rate': self.change_rate,
+            'ups_downs': self.ups_downs,
+            'turnoverrate': self.turnoverrate,
+            'volume': self.volume,
+            'deal_amount': self.deal_amount,
+            'dde': self.dde,
+        }
+
+
 class DatabaseManager:
     """
     数据库管理器 - 单例模式

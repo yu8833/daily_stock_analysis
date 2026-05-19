@@ -1,0 +1,228 @@
+# -*- coding: utf-8 -*-
+"""
+===================================
+涨停数据访问层
+===================================
+
+职责：
+1. 封装涨停原因数据的数据库操作
+2. 提供涨停数据查询接口
+3. 支持数据持久化和缓存
+"""
+
+import logging
+from datetime import date, datetime
+from typing import Optional, List, Dict, Any
+
+import pandas as pd
+from sqlalchemy import select, and_, desc, delete
+
+from src.storage import DatabaseManager, StockLimitupReason
+from data_provider.jqka_fetcher import TenJqkaFetcher
+
+logger = logging.getLogger(__name__)
+
+
+class LimitUpRepository:
+    """
+    涨停数据访问层
+    
+    封装 StockLimitupReason 表的数据库操作，支持从数据源获取并持久化
+    """
+    
+    def __init__(self, db_manager: Optional[DatabaseManager] = None):
+        """
+        初始化数据访问层
+        
+        Args:
+            db_manager: 数据库管理器（可选，默认使用单例）
+        """
+        self.db = db_manager or DatabaseManager.get_instance()
+        self.fetcher = TenJqkaFetcher()
+    
+    def get_by_date(self, query_date: date) -> List[StockLimitupReason]:
+        """
+        获取指定日期的涨停数据
+        
+        Args:
+            query_date: 查询日期
+            
+        Returns:
+            StockLimitupReason 对象列表
+        """
+        with self.db.get_session() as session:
+            results = session.execute(
+                select(StockLimitupReason)
+                .where(StockLimitupReason.date == query_date)
+                .order_by(desc(StockLimitupReason.change_rate), StockLimitupReason.code)
+            ).scalars().all()
+            return list(results)
+    
+    def get_by_date_range(
+        self,
+        start_date: date,
+        end_date: date
+    ) -> List[StockLimitupReason]:
+        """
+        获取指定日期范围的涨停数据
+        
+        Args:
+            start_date: 开始日期
+            end_date: 结束日期
+            
+        Returns:
+            StockLimitupReason 对象列表
+        """
+        with self.db.get_session() as session:
+            results = session.execute(
+                select(StockLimitupReason)
+                .where(and_(
+                    StockLimitupReason.date >= start_date,
+                    StockLimitupReason.date <= end_date
+                ))
+                .order_by(desc(StockLimitupReason.date), desc(StockLimitupReason.change_rate))
+            ).scalars().all()
+            return list(results)
+    
+    def get_by_code(self, code: str, days: int = 30) -> List[StockLimitupReason]:
+        """
+        获取指定股票的涨停历史
+        
+        Args:
+            code: 股票代码
+            days: 最近天数
+            
+        Returns:
+            StockLimitupReason 对象列表
+        """
+        cutoff_date = datetime.now() - pd.Timedelta(days=days)
+        
+        with self.db.get_session() as session:
+            results = session.execute(
+                select(StockLimitupReason)
+                .where(and_(
+                    StockLimitupReason.code == code,
+                    StockLimitupReason.date >= cutoff_date.date()
+                ))
+                .order_by(desc(StockLimitupReason.date))
+            ).scalars().all()
+            return list(results)
+    
+    def has_date_data(self, query_date: date) -> bool:
+        """
+        检查指定日期是否已有数据
+        
+        Args:
+            query_date: 查询日期
+            
+        Returns:
+            是否存在数据
+        """
+        with self.db.get_session() as session:
+            result = session.execute(
+                select(StockLimitupReason)
+                .where(StockLimitupReason.date == query_date)
+            ).scalar_one_or_none()
+            return result is not None
+    
+    def save_from_fetcher(self, query_date: date) -> int:
+        """
+        从数据源获取数据并保存到数据库
+        
+        Args:
+            query_date: 查询日期
+            
+        Returns:
+            保存的记录数
+        """
+        # 从同花顺获取数据
+        data_list = self.fetcher.get_limit_up_reason(query_date.strftime('%Y-%m-%d'))
+        
+        if not data_list:
+            logger.info(f"未获取到 {query_date} 的涨停数据")
+            return 0
+        
+        # 删除该日期的旧数据
+        self._delete_date_data(query_date)
+        
+        # 插入新数据
+        saved_count = 0
+        with self.db.get_session() as session:
+            for item in data_list:
+                try:
+                    record = StockLimitupReason(
+                        date=query_date,
+                        code=str(item.get('代码', '')).strip(),
+                        name=str(item.get('名称', '')).strip(),
+                        title=str(item.get('原因', '')).strip(),
+                        reason=str(item.get('详因', '')).strip(),
+                        new_price=item.get('最新价'),
+                        change_rate=item.get('涨跌幅'),
+                        ups_downs=item.get('涨跌额'),
+                        turnoverrate=item.get('换手率'),
+                        volume=item.get('成交量'),
+                        deal_amount=item.get('成交额'),
+                        dde=item.get('DDE'),
+                    )
+                    session.add(record)
+                    saved_count += 1
+                except Exception as e:
+                    logger.warning(f"保存涨停数据失败 (code={item.get('代码')}): {e}")
+            
+            session.commit()
+            logger.info(f"保存涨停数据成功: {query_date}, 新增 {saved_count} 条")
+        
+        return saved_count
+    
+    def _delete_date_data(self, query_date: date) -> None:
+        """
+        删除指定日期的数据
+        
+        Args:
+            query_date: 查询日期
+        """
+        with self.db.get_session() as session:
+            session.execute(
+                delete(StockLimitupReason)
+                .where(StockLimitupReason.date == query_date)
+            )
+            session.commit()
+    
+    def get_or_fetch(self, query_date: date) -> List[StockLimitupReason]:
+        """
+        获取指定日期的涨停数据，如果数据库中没有则从数据源获取并保存
+        
+        Args:
+            query_date: 查询日期
+            
+        Returns:
+            StockLimitupReason 对象列表
+        """
+        # 先检查数据库
+        results = self.get_by_date(query_date)
+        if results:
+            logger.debug(f"从数据库获取涨停数据: {query_date}, {len(results)} 条")
+            return results
+        
+        # 数据库没有，从数据源获取
+        logger.info(f"数据库未找到 {query_date} 的涨停数据，从数据源获取")
+        self.save_from_fetcher(query_date)
+        
+        # 返回获取的数据
+        return self.get_by_date(query_date)
+    
+    def batch_fetch_and_save(self, dates: List[date]) -> Dict[date, int]:
+        """
+        批量获取并保存多个日期的涨停数据
+        
+        Args:
+            dates: 日期列表
+            
+        Returns:
+            每个日期保存的记录数字典
+        """
+        result = {}
+        for query_date in dates:
+            count = self.save_from_fetcher(query_date)
+            result[query_date] = count
+        return result

@@ -1009,10 +1009,12 @@ class DataFetcherManager:
         from .baostock_fetcher import BaostockFetcher
         from .yfinance_fetcher import YfinanceFetcher
         from .longbridge_fetcher import LongbridgeFetcher
+        from .jqka_fetcher import TenJqkaFetcher
         config = get_config()
         # 创建所有数据源实例（优先级在各 Fetcher 的 __init__ 中确定）
         efinance = EfinanceFetcher()
         akshare = AkshareFetcher()
+        jqka = TenJqkaFetcher()     # 同花顺数据源（涨停原因）
         pytdx = PytdxFetcher()      # 通达信数据源（可配 PYTDX_HOST/PYTDX_PORT）
         baostock = BaostockFetcher()
         yfinance = YfinanceFetcher()
@@ -1054,6 +1056,7 @@ class DataFetcherManager:
             self._fetchers = [
                 efinance,
                 akshare,
+                jqka,
                 pytdx,
                 baostock,
                 yfinance,

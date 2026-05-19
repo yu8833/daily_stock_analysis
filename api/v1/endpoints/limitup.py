@@ -34,7 +34,9 @@ router = APIRouter()
 def get_limit_up_data(
     date: Optional[str] = Query(None, description="日期（YYYY-MM-DD），默认当天"),
     page: int = Query(1, ge=1, description="页码，从1开始"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数")
+    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    sort_field: str = Query("change_pct", description="排序字段：turnover_rate/volume/amount/change_pct"),
+    sort_order: str = Query("desc", description="排序方式：asc/desc")
 ):
     """
     获取涨停数据
@@ -45,6 +47,8 @@ def get_limit_up_data(
         date: 日期（YYYY-MM-DD），默认当天
         page: 页码，从1开始
         page_size: 每页条数，最大100条
+        sort_field: 排序字段，支持 turnover_rate/volume/amount/change_pct
+        sort_order: 排序方式，asc（升序）或 desc（降序）
         
     Returns:
         包含日期、分页信息和股票列表的字典
@@ -69,6 +73,24 @@ def get_limit_up_data(
         
         # 获取数据（优先从数据库，不存在则从数据源获取）
         results = repo.get_or_fetch(query_date)
+        
+        # 排序字段映射
+        field_mapping = {
+            'turnover_rate': 'turnoverrate',
+            'volume': 'volume',
+            'amount': 'deal_amount',
+            'change_pct': 'change_rate'
+        }
+        
+        # 验证排序字段
+        if sort_field not in field_mapping:
+            sort_field = 'change_pct'
+        
+        # 排序
+        sort_key = field_mapping[sort_field]
+        reverse = sort_order.lower() == 'desc'
+        
+        results.sort(key=lambda x: getattr(x, sort_key) or 0, reverse=reverse)
         
         # 计算分页
         total_count = len(results)

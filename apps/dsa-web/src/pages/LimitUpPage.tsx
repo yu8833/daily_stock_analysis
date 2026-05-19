@@ -51,6 +51,9 @@ function formatPct(value: number | null | undefined): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+type SortField = 'turnover_rate' | 'volume' | 'amount' | 'change_pct';
+type SortOrder = 'asc' | 'desc';
+
 const LimitUpPage: React.FC = () => {
   useEffect(() => {
     document.title = '涨停揭秘 - STOCK';
@@ -67,6 +70,10 @@ const LimitUpPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  
+  // 排序状态
+  const [sortField, setSortField] = useState<SortField>('change_pct');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   const toggleDetail = (code: string) => {
     setExpandedDetails(prev => ({
@@ -75,12 +82,22 @@ const LimitUpPage: React.FC = () => {
     }));
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('desc');
+    }
+    setCurrentPage(1);
+  };
+
   const fetchLimitUpData = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const url = `/api/v1/limitup/?date=${selectedDate}&page=${currentPage}&page_size=${pageSize}`;
+      const url = `/api/v1/limitup/?date=${selectedDate}&page=${currentPage}&page_size=${pageSize}&sort_field=${sortField}&sort_order=${sortOrder}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -116,7 +133,7 @@ const LimitUpPage: React.FC = () => {
 
   useEffect(() => {
     void fetchLimitUpData();
-  }, [currentPage]);
+  }, [currentPage, sortField, sortOrder]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -195,10 +212,54 @@ const LimitUpPage: React.FC = () => {
                     <th className="text-left py-3 px-2">名称</th>
                     <th className="text-left py-3 px-2">涨停原因</th>
                     <th className="text-left py-3 px-2">详因</th>
-                    <th className="text-right py-3 px-2">换手率</th>
-                    <th className="text-right py-3 px-2">成交量</th>
-                    <th className="text-right py-3 px-2">成交额(万)</th>
-                    <th className="text-right py-3 px-2">涨跌幅</th>
+                    <th className="text-right py-3 px-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSort('turnover_rate')}
+                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors"
+                      >
+                        换手率
+                        {sortField === 'turnover_rate' && (
+                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </button>
+                    </th>
+                    <th className="text-right py-3 px-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSort('volume')}
+                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors"
+                      >
+                        成交量
+                        {sortField === 'volume' && (
+                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </button>
+                    </th>
+                    <th className="text-right py-3 px-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSort('amount')}
+                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors"
+                      >
+                        成交额(万)
+                        {sortField === 'amount' && (
+                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </button>
+                    </th>
+                    <th className="text-right py-3 px-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSort('change_pct')}
+                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors"
+                      >
+                        涨跌幅
+                        {sortField === 'change_pct' && (
+                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

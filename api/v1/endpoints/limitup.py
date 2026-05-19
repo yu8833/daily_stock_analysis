@@ -28,9 +28,25 @@ def is_trading_day(check_date: date) -> bool:
         check_date: 要检查的日期
 
     Returns:
-        是否为交易日（周一到周五返回True，周六周日返回False）
+        是否为交易日（周一到周五且非节假日返回True，周六周日或节假日返回False）
     """
-    return check_date.weekday() < 5
+    if check_date.weekday() >= 5:
+        return False
+
+    year = check_date.year
+    month = check_date.month
+    day = check_date.day
+
+    holidays_2026 = [
+        (1, 1),
+        (5, 1), (5, 2), (5, 3), (5, 4), (5, 5),
+        (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7),
+        (4, 4), (4, 5), (4, 6),
+        (6, 19), (6, 20), (6, 21),
+        (9, 25), (9, 26), (9, 27),
+    ]
+
+    return (month, day) not in holidays_2026
 
 router = APIRouter()
 

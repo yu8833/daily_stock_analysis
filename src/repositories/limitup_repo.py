@@ -188,9 +188,31 @@ class LimitUpRepository:
             )
             session.commit()
     
+    def _has_missing_fields(self, record: StockLimitupReason) -> bool:
+        """
+        检查单条记录是否有缺失的关键字段
+        
+        Args:
+            record: StockLimitupReason 对象
+            
+        Returns:
+            是否有缺失字段
+        """
+        if record.turnoverrate is None or (isinstance(record.turnoverrate, float) and record.turnoverrate == 0.0):
+            return True
+        if record.volume is None or (isinstance(record.volume, float) and record.volume == 0.0):
+            return True
+        if record.deal_amount is None or (isinstance(record.deal_amount, float) and record.deal_amount == 0.0):
+            return True
+        if record.change_rate is None or (isinstance(record.change_rate, float) and record.change_rate == 0.0):
+            return True
+        
+        return False
+    
     def get_or_fetch(self, query_date: date) -> List[StockLimitupReason]:
         """
         获取指定日期的涨停数据，如果数据库中没有则从数据源获取并保存
+        如果已有数据但有缺失字段，会删除旧数据并重新获取
         
         Args:
             query_date: 查询日期
@@ -201,6 +223,16 @@ class LimitUpRepository:
         # 先检查数据库
         results = self.get_by_date(query_date)
         if results:
+            # 检查是否有缺失字段的记录
+            has_missing = any(self._has_missing_fields(r) for r in results)
+            if has_missing:
+                # 有缺失字段，删除旧数据并重新获取
+                logger.info(f"发现 {query_date} 的涨停数据有缺失字段，删除旧数据并重新获取")
+                self._delete_date_data(query_date)
+                self.save_from_fetcher(query_date)
+                # 返回重新获取的数据
+                return self.get_by_date(query_date)
+            
             logger.debug(f"从数据库获取涨停数据: {query_date}, {len(results)} 条")
             return results
         

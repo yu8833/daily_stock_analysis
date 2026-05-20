@@ -2,7 +2,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { Card, Badge, EmptyState, Loading } from '../components/common';
 import { toDateInputValue } from '../utils/format';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, ExternalLink } from 'lucide-react';
 
 interface LimitUpStock {
   code: string;
@@ -55,6 +55,24 @@ function formatPct(value: number | null | undefined): string {
 
 type SortField = 'turnover_rate' | 'volume' | 'amount' | 'change_pct';
 type SortOrder = 'asc' | 'desc';
+
+function getEastMoneyUrl(code: string): string {
+  let market = '';
+  const codeStr = String(code).trim();
+  
+  if (codeStr.startsWith('60') || codeStr.startsWith('688')) {
+    market = 'sh';
+  } else if (codeStr.startsWith('00') || codeStr.startsWith('30')) {
+    market = 'sz';
+  } else if (codeStr.startsWith('hk')) {
+    market = 'hk';
+    return `https://quote.eastmoney.com/${codeStr}.html`;
+  } else if (codeStr.length === 6) {
+    market = 'sh';
+  }
+  
+  return `https://quote.eastmoney.com/${market}${codeStr}.html`;
+}
 
 const LimitUpPage: React.FC = () => {
   useEffect(() => {
@@ -302,7 +320,17 @@ const LimitUpPage: React.FC = () => {
                 <tbody>
                   {stockList.map((stock, index) => (
                     <tr key={`${stock.code}-${index}`} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="py-3 px-2 font-mono text-foreground">{stock.code}</td>
+                      <td className="py-3 px-2">
+                        <a
+                          href={getEastMoneyUrl(stock.code)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-mono text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+                        >
+                          {stock.code}
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </td>
                       <td className="py-3 px-2 font-medium">{stock.name}</td>
                       <td className="py-3 px-2 text-secondary max-w-xs truncate" title={stock.reason}>
                         {stock.reason || '-'}

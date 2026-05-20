@@ -115,8 +115,8 @@ def get_limit_up_data(
                 "message": f"{query_date.strftime('%Y-%m-%d')} 是非交易日（周末或节假日），暂无涨停数据"
             }
 
-        # 获取数据（优先从数据库，不存在则从数据源获取）
-        results = repo.get_or_fetch(query_date)
+        # 获取数据（优先从数据库，不存在则从数据源获取，不检查缺失字段）
+        results = repo.get_or_fetch(query_date, check_missing=False)
 
         # 关键字过滤
         if keyword and keyword.strip():
@@ -260,5 +260,68 @@ def fetch_limit_up_data(
             detail={
                 "error": "internal_error",
                 "message": f"获取涨停数据失败: {str(e)}"
+            }
+        )
+
+
+@router.post(
+    "/refresh",
+    responses={
+        200: {"description": "数据刷新成功"},
+        500: {"description": "服务器错误", "model": ErrorResponse},
+    },
+    summary="刷新缺失数据",
+    description="检查并刷新指定日期中缺失字段的涨停数据（换手率、成交量、成交额、涨跌幅）"
+)
+def refresh_limit_up_data(
+    date: Optional[str] = Query(None, description="日期（YYYY-MM-DD），默认当天")
+):
+    """
+    刷新缺失的涨停数据
+    
+    检查数据库中已有数据是否有缺失字段（换手率、成交量、成交额、涨跌幅），如有则从数据源重新获取并保存
+    
+    Args:
+        date: 日期（YYYY-MM-DD），默认当天
+        
+    Returns:
+        刷新结果
+        
+    Raises:
+        HTTPException: 500 - 刷新数据失败
+    """
+    try:
+        repo = LimitUpRepository()
+        
+        # 使用指定日期或默认当天
+        if date:
+            try:
+                query_date = datetime.strptime(date, '%Y-%m-%d').date()
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"error": "invalid_date", "message": "日期格式错误，应为 YYYY-MM-DD"}
+                )
+        else:
+            query_date = date.today()
+        
+        # 获取数据并检查缺失字段，如有则刷新
+        results = repo.get_or_fetch(query_date, check_missing=True)
+        
+        return {
+            "date": query_date.isoformat(),
+            "count": len(results),
+            "message": f"成功获取 {len(results)} 条涨停数据"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"刷新涨停数据失败: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "internal_error",
+                "message": f"刷新涨停数据失败: {str(e)}"
             }
         )

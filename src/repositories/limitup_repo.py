@@ -209,13 +209,13 @@ class LimitUpRepository:
         
         return False
     
-    def get_or_fetch(self, query_date: date) -> List[StockLimitupReason]:
+    def get_or_fetch(self, query_date: date, check_missing: bool = False) -> List[StockLimitupReason]:
         """
         获取指定日期的涨停数据，如果数据库中没有则从数据源获取并保存
-        如果已有数据但有缺失字段，会删除旧数据并重新获取
         
         Args:
             query_date: 查询日期
+            check_missing: 是否检查缺失字段，True时如果有缺失会删除旧数据并重新获取
             
         Returns:
             StockLimitupReason 对象列表
@@ -223,15 +223,16 @@ class LimitUpRepository:
         # 先检查数据库
         results = self.get_by_date(query_date)
         if results:
-            # 检查是否有缺失字段的记录
-            has_missing = any(self._has_missing_fields(r) for r in results)
-            if has_missing:
-                # 有缺失字段，删除旧数据并重新获取
-                logger.info(f"发现 {query_date} 的涨停数据有缺失字段，删除旧数据并重新获取")
-                self._delete_date_data(query_date)
-                self.save_from_fetcher(query_date)
-                # 返回重新获取的数据
-                return self.get_by_date(query_date)
+            if check_missing:
+                # 检查是否有缺失字段的记录
+                has_missing = any(self._has_missing_fields(r) for r in results)
+                if has_missing:
+                    # 有缺失字段，删除旧数据并重新获取
+                    logger.info(f"发现 {query_date} 的涨停数据有缺失字段，删除旧数据并重新获取")
+                    self._delete_date_data(query_date)
+                    self.save_from_fetcher(query_date)
+                    # 返回重新获取的数据
+                    return self.get_by_date(query_date)
             
             logger.debug(f"从数据库获取涨停数据: {query_date}, {len(results)} 条")
             return results

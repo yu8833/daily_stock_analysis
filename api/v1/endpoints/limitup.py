@@ -115,11 +115,13 @@ def get_limit_up_data(
                 "message": f"{query_date.strftime('%Y-%m-%d')} 是非交易日（周末或节假日），暂无涨停数据"
             }
 
-        # 获取数据（优先从数据库，不存在则从数据源获取，不检查缺失字段）
-        results = repo.get_or_fetch(query_date, check_missing=False)
+        # 获取数据（优先从数据库，不存在则从数据源获取）
+        # 如果没有关键字搜索（页面刷新），检查缺失字段；有关键字搜索时不检查
+        has_keyword = keyword and keyword.strip()
+        results = repo.get_or_fetch(query_date, check_missing=not has_keyword)
 
         # 关键字过滤
-        if keyword and keyword.strip():
+        if has_keyword:
             keyword_lower = keyword.lower().strip()
             filtered_results = []
             for item in results:

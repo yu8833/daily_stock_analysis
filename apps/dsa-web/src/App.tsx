@@ -18,6 +18,8 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 const LimitUpPage = lazy(() => import('./pages/LimitUpPage'));
 const SelectionPage = lazy(() => import('./pages/SelectionPage'));
+const BuyPage = lazy(() => import('./pages/BuyPage'));
+const SellPage = lazy(() => import('./pages/SellPage'));
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -77,6 +79,8 @@ const AppContent: React.FC = () => {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/limitup" element={<LimitUpPage />} />
         <Route path="/select" element={<SelectionPage />} />
+        <Route path="/buy" element={<BuyPage />} />
+        <Route path="/sell" element={<SellPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

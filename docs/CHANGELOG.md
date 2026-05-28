@@ -48,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [修复] 为 Akshare 新浪/腾讯 A 股历史兜底接口增加调用级超时，并补齐 Tushare `605xxx` 沪市代码路由回归测试，避免定时分析因数据源无响应而挂起。
 - [修复] 将 `exchange-calendars` 依赖下限提升到 `4.13.0`，避免 pandas 3 环境导入交易日历时因 Timedelta 单位 `T` 失效导致分析失败。
 - [测试] 执行 `python -c "import exchange_calendars as xcals; xcals.get_calendar('XSHG'); print('ok')"` 通过验证，以覆盖导入与交易日历初始化兼容性。
+- [新功能] 新增买入/卖出信号功能，包括 `/api/v1/buy` 和 `/api/v1/sell` API 端点，以及对应 Web 页面
+- [改进] 选股、买入、卖出页面统一添加复选框选择功能，导出按钮移至关键字输入框后并支持导出选中项
+- [修复] 修复买入/卖出页面信号字段显示为 `-` 的问题，后端 API 补充缺失字段并兼容整数类型值
 
 ## [3.18.0] - 2026-05-21
 

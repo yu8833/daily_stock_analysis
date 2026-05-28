@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Card, Badge, EmptyState, Loading } from '../components/common';
+import { Card, Badge, EmptyState, Loading, Checkbox } from '../components/common';
 import { Search, ExternalLink, Filter, ChevronDown, ArrowUp, ArrowDown, X, Check, Download } from 'lucide-react';
 
 interface SelectionStock {
@@ -490,6 +490,7 @@ const SelectionPage: React.FC = () => {
   const [openColumnMenu, setOpenColumnMenu] = useState<string | null>(null);
   const columnMenuRef = useRef<HTMLDivElement>(null);
   const [filteredStockList, setFilteredStockList] = useState<SelectionStock[]>([]);
+  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setFilteredStockList(stockList);
@@ -642,6 +643,24 @@ const SelectionPage: React.FC = () => {
     return filter.size < allValues.length;
   };
 
+  const handleSelectAll = () => {
+    if (selectedCodes.size === filteredStockList.length) {
+      setSelectedCodes(new Set());
+    } else {
+      setSelectedCodes(new Set(filteredStockList.map(s => s.code)));
+    }
+  };
+
+  const handleSelectRow = (code: string) => {
+    const newSelected = new Set(selectedCodes);
+    if (newSelected.has(code)) {
+      newSelected.delete(code);
+    } else {
+      newSelected.add(code);
+    }
+    setSelectedCodes(newSelected);
+  };
+
   const renderCellValue = (stock: SelectionStock, column: typeof COLUMN_CONFIG[0]) => {
     const value = (stock as any)[column.key];
     if (value === null || value === undefined) return '-';
@@ -677,8 +696,12 @@ const SelectionPage: React.FC = () => {
   };
 
   const handleExport = () => {
+    const exportList = selectedCodes.size > 0
+      ? filteredStockList.filter(s => selectedCodes.has(s.code))
+      : filteredStockList;
+
     const headers = COLUMN_CONFIG.map(col => col.label).join(',');
-    const rows = filteredStockList.map(stock => {
+    const rows = exportList.map(stock => {
       return COLUMN_CONFIG.map(col => {
         const value = (stock as any)[col.key];
         if (value === null || value === undefined) return '';
@@ -744,6 +767,14 @@ const SelectionPage: React.FC = () => {
                   清除
                 </button>
               )}
+              <button
+                type="button"
+                onClick={handleExport}
+                className="btn-secondary h-10 px-3 flex items-center gap-2"
+              >
+                <Download size={14} />
+                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出全部'}
+              </button>
             </div>
             <Badge variant="success">{totalCount} 只股票</Badge>
           </div>
@@ -761,6 +792,12 @@ const SelectionPage: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
+                    <th className="w-12 px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <Checkbox
+                        checked={filteredStockList.length > 0 && selectedCodes.size === filteredStockList.length}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
                     {COLUMN_CONFIG.map(column => (
                       <th
                         key={column.key}
@@ -854,7 +891,7 @@ const SelectionPage: React.FC = () => {
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredStockList.length === 0 ? (
                     <tr>
-                      <td colSpan={COLUMN_CONFIG.length} className="px-6 py-12 text-center">
+                      <td colSpan={COLUMN_CONFIG.length + 1} className="px-6 py-12 text-center">
                       <EmptyState
                         title="暂无数据"
                         description="没有找到符合条件的股票数据"
@@ -864,6 +901,12 @@ const SelectionPage: React.FC = () => {
                   ) : (
                       filteredStockList.map(stock => (
                         <tr key={stock.code} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="px-3 py-3">
+                            <Checkbox
+                              checked={selectedCodes.has(stock.code)}
+                              onChange={() => handleSelectRow(stock.code)}
+                            />
+                          </td>
                           {COLUMN_CONFIG.map(column => (
                             <td
                               key={column.key}
@@ -914,14 +957,6 @@ const SelectionPage: React.FC = () => {
                   </select>
                   <span className="text-sm text-secondary">条</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleExport}
-                  className="btn-secondary h-8 px-3 flex items-center gap-2"
-                >
-                  <Download size={14} />
-                  导出 CSV
-                </button>
               </div>
               
               <div className="flex items-center gap-1">

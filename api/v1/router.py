@@ -11,7 +11,7 @@ API v1 路由聚合
 
 from fastapi import APIRouter
 
-from api.v1.endpoints import analysis, auth, history, stocks, system_config, agent, usage, limitup, selection
+from api.v1.endpoints import analysis, auth, history, stocks, system_config, agent, usage, limitup, selection, buy_sell
 
 # 创建 v1 版本主路由
 router = APIRouter(prefix="/api/v1")
@@ -68,4 +68,16 @@ router.include_router(
     selection.router,
     prefix="/select",
     tags=["Selection"]
+)
+
+router.include_router(
+    buy_sell.router,
+    prefix="/buy",
+    tags=["BuySell"]
+)
+
+router.include_router(
+    buy_sell.sell_router,
+    prefix="/sell",
+    tags=["BuySell"]
 )

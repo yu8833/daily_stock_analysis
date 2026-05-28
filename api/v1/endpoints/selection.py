@@ -11,9 +11,10 @@
 
 import logging
 from datetime import date as DateType, datetime
-from typing import Optional
+from typing import Optional, Dict, List
+import re
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from api.v1.schemas.common import ErrorResponse
 from src.repositories.selection_repo import SelectionRepository
@@ -33,6 +34,7 @@ router = APIRouter()
     description="获取综合选股数据，支持按行业、概念、基本面指标筛选"
 )
 def get_selection_data(
+    request: Request,
     date: Optional[str] = Query(None, description="日期（YYYY-MM-DD），默认当天"),
     page: int = Query(1, ge=1, description="页码，从1开始"),
     page_size: int = Query(20, ge=1, le=100, description="每页条数"),
@@ -99,6 +101,40 @@ def get_selection_data(
             query_date = DateType.today()
 
         results = repo.get_or_fetch(query_date)
+
+        # 解析通用筛选参数 - 支持 filters[columnKey] 格式
+        column_filters: Dict[str, List[str]] = {}
+        for key, value in request.query_params.multi_items():
+            if key.startswith('filters[') and key.endswith(']'):
+                column_key = key[8:-1]  # 提取列名
+                if column_key:
+                    if column_key not in column_filters:
+                        column_filters[column_key] = []
+                    column_filters[column_key].append(value)
+        
+        # 应用通用筛选
+        for column_key, filter_values in column_filters.items():
+            if filter_values:
+                filtered = []
+                for item in results:
+                    item_value = getattr(item, column_key, None)
+                    # 检查是否匹配任意一个筛选值
+                    match = False
+                    for filter_val in filter_values:
+                        # 处理flag类型字段，通常值可能是 "是"/"否" 或 "1"/"0"
+                        if item_value is not None:
+                            str_val = str(item_value).strip().lower()
+                            filter_lower = filter_val.strip().lower()
+                            # 匹配逻辑：如果筛选值和项值匹配（不区分大小写）
+                            # 或者 "是" 匹配 "1"，"否" 匹配 "0"
+                            if (str_val == filter_lower or
+                                (filter_lower in ['是', '1'] and str_val in ['是', '1']) or
+                                (filter_lower in ['否', '0'] and str_val in ['否', '0'])):
+                                match = True
+                                break
+                    if match:
+                        filtered.append(item)
+                results = filtered
 
         if industries:
             industry_set = set([i.lower().strip() for i in industries if i.strip()])

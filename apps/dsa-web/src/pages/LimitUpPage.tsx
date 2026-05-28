@@ -97,6 +97,7 @@ const LimitUpPage: React.FC = () => {
 
   // 搜索状态
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState('');
 
   // 提示信息状态
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
@@ -130,8 +131,8 @@ const LimitUpPage: React.FC = () => {
         sort_field: sortField,
         sort_order: sortOrder,
       });
-      if (searchKeyword.trim()) {
-        params.append('keyword', searchKeyword.trim());
+      if (debouncedKeyword.trim()) {
+        params.append('keyword', debouncedKeyword.trim());
       }
       const url = `/api/v1/limitup/?${params.toString()}`;
       const response = await fetch(url);
@@ -165,9 +166,17 @@ const LimitUpPage: React.FC = () => {
   };
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(searchKeyword);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
+
+  useEffect(() => {
     setCurrentPage(1);
     void fetchLimitUpData();
-  }, [selectedDate, pageSize, searchKeyword]);
+  }, [selectedDate, pageSize, debouncedKeyword]);
 
   useEffect(() => {
     void fetchLimitUpData();

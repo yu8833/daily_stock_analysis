@@ -9,7 +9,8 @@
 """
 
 import logging
-from datetime import date, datetime
+from datetime import datetime
+from datetime import date as date_class
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -20,7 +21,7 @@ from src.repositories.limitup_repo import LimitUpRepository
 logger = logging.getLogger(__name__)
 
 
-def is_trading_day(check_date: date) -> bool:
+def is_trading_day(check_date: date_class) -> bool:
     """
     检查是否为交易日（中国A股）
 
@@ -100,7 +101,7 @@ def get_limit_up_data(
                     detail={"error": "invalid_date", "message": "日期格式错误，应为 YYYY-MM-DD"}
                 )
         else:
-            query_date = date.today()
+            query_date = date_class.today()
 
         # 检查是否为交易日（非交易日返回空数据）
         if not is_trading_day(query_date):
@@ -242,7 +243,7 @@ def fetch_limit_up_data(
                     detail={"error": "invalid_date", "message": "日期格式错误，应为 YYYY-MM-DD"}
                 )
         else:
-            query_date = date.today()
+            query_date = date_class.today()
         
         # 从数据源获取并保存
         count = repo.save_from_fetcher(query_date)

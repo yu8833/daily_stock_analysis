@@ -390,7 +390,11 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
                 )
             if file_path.is_file():
                 relative_path = file_path.relative_to(assets_root).as_posix()
-                return await assets_static_files.get_response(relative_path, request.scope)
+                response = await assets_static_files.get_response(relative_path, request.scope)
+                response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+                response.headers["Pragma"] = "no-cache"
+                response.headers["Expires"] = "0"
+                return response
             return Response(
                 content="asset not found",
                 status_code=404,
@@ -419,7 +423,7 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
                 # Issue #520: Explicitly resolve MIME type to avoid
                 # browsers rejecting JS modules served as text/plain.
                 content_type, _ = mimetypes.guess_type(str(file_path))
-                return FileResponse(file_path, media_type=content_type)
+                return FileResponse(file_path, media_type=content_type, headers=_FRONTEND_INDEX_NO_CACHE_HEADERS)
 
             return _frontend_index_response(static_dir)
     

@@ -216,6 +216,84 @@ type SortOrder = 'asc' | 'desc';
 const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'left' | 'right' | 'center'; type: 'text' | 'number' | 'percent' | 'money' | 'price' | 'date' | 'flag' }[] = [
   { key: 'code', label: '代码', width: 'w-16', align: 'left', type: 'text' },
   { key: 'name', label: '名称', width: 'w-20', align: 'left', type: 'text' },
+  { key: 'is_issue_break', label: '破发', width: 'w-14', align: 'center', type: 'flag' },
+  { key: 'is_bps_break', label: '破净', width: 'w-14', align: 'center', type: 'flag' },
+  { key: 'is_hs300', label: '沪深300', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'is_sz50', label: '上证50', width: 'w-14', align: 'center', type: 'flag' },
+  { key: 'is_zz500', label: '中证500', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'is_zz1000', label: '中证1000', width: 'w-20', align: 'center', type: 'flag' },
+  { key: 'is_cy50', label: '创业板50', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'macd_golden_fork', label: 'MACD金叉', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'macd_golden_forkz', label: 'MACD周金叉', width: 'w-20', align: 'center', type: 'flag' },
+  { key: 'macd_golden_forky', label: 'MACD月金叉', width: 'w-20', align: 'center', type: 'flag' },
+  { key: 'kdj_golden_fork', label: 'KDJ金叉', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'kdj_golden_forkz', label: 'KDJ周金叉', width: 'w-20', align: 'center', type: 'flag' },
+  { key: 'kdj_golden_forky', label: 'KDJ月金叉', width: 'w-20', align: 'center', type: 'flag' },
+  { key: 'break_through', label: '放量突破', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'low_funds_inflow', label: '低位资金净流入', width: 'w-24', align: 'center', type: 'flag' },
+  { key: 'high_funds_outflow', label: '高位资金净流出', width: 'w-24', align: 'center', type: 'flag' },
+  { key: 'breakup_ma_5days', label: '站5日线', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'breakup_ma_10days', label: '站10日线', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'breakup_ma_20days', label: '站20日线', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'breakup_ma_30days', label: '站30日线', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'breakup_ma_60days', label: '站60日线', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'long_avg_array', label: '均线多头', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'short_avg_array', label: '均线空头', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'upper_large_volume', label: '连涨放量', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'down_narrow_volume', label: '下跌无量', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'one_dayang_line', label: '大阳线', width: 'w-14', align: 'center', type: 'flag' },
+  { key: 'two_dayang_lines', label: '两连阳', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'rise_sun', label: '旭日东升', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'power_fulgun', label: '强势多方炮', width: 'w-20', align: 'center', type: 'flag' },
+  { key: 'restore_justice', label: '拨云见日', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'down_7days', label: '七连阴', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'upper_8days', label: '八连阳', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'upper_9days', label: '九连阳', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'upper_4days', label: '四串阳', width: 'w-16', align: 'center', type: 'flag' },
+  { key: 'heaven_rule', label: '天量法则', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'upside_volume', label: '放量上攻', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'bearish_engulfing', label: '穿头破脚', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'reversing_hammer', label: '倒转锤头', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'shooting_star', label: '射击之星', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'evening_star', label: '黄昏之星', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'first_dawn', label: '曙光初现', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'pregnant', label: '身怀六甲', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'black_cloud_tops', label: '乌云盖顶', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'morning_star', label: '早晨之星', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'narrow_finish', label: '窄幅整理', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'limited_lift_f6m', label: '限售解禁未来半年', width: 'w-28', align: 'center', type: 'flag' },
+  { key: 'limited_lift_f1y', label: '限售解禁未来一年', width: 'w-28', align: 'center', type: 'flag' },
+  { key: 'limited_lift_6m', label: '限售解禁近半年', width: 'w-24', align: 'center', type: 'flag' },
+  { key: 'limited_lift_1y', label: '限售解禁近一年', width: 'w-24', align: 'center', type: 'flag' },
+  { key: 'directional_seo_1m', label: '定增近1月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'directional_seo_3m', label: '定增近3月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'directional_seo_6m', label: '定增近6月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'directional_seo_1y', label: '定增近1年', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'recapitalize_1m', label: '重组近1月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'recapitalize_3m', label: '重组近3月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'recapitalize_6m', label: '重组近6月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'recapitalize_1y', label: '重组近1年', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'equity_pledge_1m', label: '质押近1月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'equity_pledge_3m', label: '质押近3月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'equity_pledge_6m', label: '质押近6月', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'equity_pledge_1y', label: '质押近1年', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'now_newhigh', label: '今日创历史新高', width: 'w-24', align: 'center', type: 'flag' },
+  { key: 'now_newlow', label: '今日创历史新低', width: 'w-24', align: 'center', type: 'flag' },
+  { key: 'high_recent_3days', label: '近期创历史新高近3日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'high_recent_5days', label: '近期创历史新高近5日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'high_recent_10days', label: '近期创历史新高近10日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'high_recent_20days', label: '近期创历史新高近20日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'high_recent_30days', label: '近期创历史新高近30日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'low_recent_3days', label: '近期创历史新低近3日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'low_recent_5days', label: '近期创历史新低近5日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'low_recent_10days', label: '近期创历史新低近10日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'low_recent_20days', label: '近期创历史新低近20日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'low_recent_30days', label: '近期创历史新低近30日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'win_market_3days', label: '近期跑赢大盘近3日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'win_market_5days', label: '近期跑赢大盘近5日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'win_market_10days', label: '近期跑赢大盘近10日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'win_market_20days', label: '近期跑赢大盘近20日', width: 'w-32', align: 'center', type: 'flag' },
+  { key: 'win_market_30days', label: '近期跑赢大盘近30日', width: 'w-32', align: 'center', type: 'flag' },
   { key: 'industry', label: '行业', width: 'w-24', align: 'left', type: 'text' },
   { key: 'area', label: '地区', width: 'w-16', align: 'left', type: 'text' },
   { key: 'concept', label: '概念', width: 'w-32', align: 'left', type: 'text' },
@@ -284,60 +362,6 @@ const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'lef
   { key: 'holdnum_growthrate_hy', label: '户均持股数半年增长', width: 'w-28', align: 'right', type: 'percent' },
   { key: 'hold_ratio_count', label: '十大股东持股', width: 'w-24', align: 'right', type: 'percent' },
   { key: 'free_hold_ratio', label: '十大流通股东', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'macd_golden_fork', label: 'MACD金叉', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'macd_golden_forkz', label: 'MACD周金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'macd_golden_forky', label: 'MACD月金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'kdj_golden_fork', label: 'KDJ金叉', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'kdj_golden_forkz', label: 'KDJ周金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'kdj_golden_forky', label: 'KDJ月金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'break_through', label: '放量突破', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'low_funds_inflow', label: '低位资金净流入', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'high_funds_outflow', label: '高位资金净流出', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_5days', label: '站5日线', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_10days', label: '站10日线', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_20days', label: '站20日线', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_30days', label: '站30日线', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_60days', label: '站60日线', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'long_avg_array', label: '均线多头', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'short_avg_array', label: '均线空头', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'upper_large_volume', label: '连涨放量', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'down_narrow_volume', label: '下跌无量', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'one_dayang_line', label: '大阳线', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'two_dayang_lines', label: '两连阳', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'rise_sun', label: '旭日东升', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'power_fulgun', label: '强势多方炮', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'restore_justice', label: '拨云见日', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'down_7days', label: '七连阴', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'upper_8days', label: '八连阳', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'upper_9days', label: '九连阳', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'upper_4days', label: '四串阳', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'heaven_rule', label: '天量法则', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'upside_volume', label: '放量上攻', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'bearish_engulfing', label: '穿头破脚', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'reversing_hammer', label: '倒转锤头', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'shooting_star', label: '射击之星', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'evening_star', label: '黄昏之星', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'first_dawn', label: '曙光初现', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'pregnant', label: '身怀六甲', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'black_cloud_tops', label: '乌云盖顶', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'morning_star', label: '早晨之星', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'narrow_finish', label: '窄幅整理', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'limited_lift_f6m', label: '限售解禁未来半年', width: 'w-28', align: 'center', type: 'flag' },
-  { key: 'limited_lift_f1y', label: '限售解禁未来一年', width: 'w-28', align: 'center', type: 'flag' },
-  { key: 'limited_lift_6m', label: '限售解禁近半年', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'limited_lift_1y', label: '限售解禁近一年', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'directional_seo_1m', label: '定增近1月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'directional_seo_3m', label: '定增近3月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'directional_seo_6m', label: '定增近6月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'directional_seo_1y', label: '定增近1年', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'recapitalize_1m', label: '重组近1月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'recapitalize_3m', label: '重组近3月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'recapitalize_6m', label: '重组近6月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'recapitalize_1y', label: '重组近1年', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'equity_pledge_1m', label: '质押近1月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'equity_pledge_3m', label: '质押近3月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'equity_pledge_6m', label: '质押近6月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'equity_pledge_1y', label: '质押近1年', width: 'w-18', align: 'center', type: 'flag' },
   { key: 'pledge_ratio', label: '质押比例', width: 'w-18', align: 'right', type: 'percent' },
   { key: 'goodwill_scale', label: '商誉规模', width: 'w-20', align: 'right', type: 'money' },
   { key: 'goodwill_assets_ratro', label: '商誉占比', width: 'w-18', align: 'right', type: 'percent' },
@@ -373,25 +397,6 @@ const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'lef
   { key: 'bigfans_ratio', label: '铁杆粉丝占比', width: 'w-24', align: 'right', type: 'percent' },
   { key: 'concern_rank_7days', label: '7日关注排名', width: 'w-24', align: 'right', type: 'number' },
   { key: 'browse_rank', label: '今日浏览排名', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'is_issue_break', label: '破发', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'is_bps_break', label: '破净', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'now_newhigh', label: '今日创历史新高', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'now_newlow', label: '今日创历史新低', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'high_recent_3days', label: '近期创历史新高近3日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'high_recent_5days', label: '近期创历史新高近5日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'high_recent_10days', label: '近期创历史新高近10日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'high_recent_20days', label: '近期创历史新高近20日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'high_recent_30days', label: '近期创历史新高近30日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_3days', label: '近期创历史新低近3日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_5days', label: '近期创历史新低近5日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_10days', label: '近期创历史新低近10日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_20days', label: '近期创历史新低近20日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_30days', label: '近期创历史新低近30日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_3days', label: '近期跑赢大盘近3日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_5days', label: '近期跑赢大盘近5日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_10days', label: '近期跑赢大盘近10日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_20days', label: '近期跑赢大盘近20日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_30days', label: '近期跑赢大盘近30日', width: 'w-32', align: 'center', type: 'flag' },
   { key: 'net_inflow', label: '当日净流入', width: 'w-24', align: 'right', type: 'money' },
   { key: 'netinflow_3days', label: '3日主力净流入', width: 'w-28', align: 'right', type: 'money' },
   { key: 'netinflow_5days', label: '5日主力净流入', width: 'w-28', align: 'right', type: 'money' },
@@ -412,11 +417,6 @@ const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'lef
   { key: 'listing_volatility_year', label: '上市以来年化波动率', width: 'w-32', align: 'right', type: 'percent' },
   { key: 'mutual_netbuy_amt', label: '沪深股通净买入', width: 'w-28', align: 'right', type: 'money' },
   { key: 'hold_ratio', label: '沪深股通持股比例', width: 'w-28', align: 'right', type: 'percent' },
-  { key: 'is_hs300', label: '沪深300', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'is_sz50', label: '上证50', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'is_zz500', label: '中证500', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'is_zz1000', label: '中证1000', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'is_cy50', label: '创业板50', width: 'w-18', align: 'center', type: 'flag' },
 ];
 
 const formatPct = (value: number | null): string => {
@@ -485,8 +485,6 @@ const SelectionPage: React.FC = () => {
   // 搜索状态
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
-
-  const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
 
   const [columnFilters, setColumnFilters] = useState<Record<string, Set<string>>>({});
   const [openColumnMenu, setOpenColumnMenu] = useState<string | null>(null);
@@ -558,7 +556,7 @@ const SelectionPage: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
     void fetchSelectionData();
-  }, [selectedDate, pageSize, debouncedKeyword]);
+  }, [selectedDate, pageSize, debouncedKeyword, columnFilters]);
 
   useEffect(() => {
     void fetchSelectionData();
@@ -644,20 +642,6 @@ const SelectionPage: React.FC = () => {
     return filter.size < allValues.length;
   };
 
-  const toggleSelectAll = () => {
-    if (selectedStocks.length === filteredStockList.length) {
-      setSelectedStocks([]);
-    } else {
-      setSelectedStocks(filteredStockList.map(s => s.code));
-    }
-  };
-
-  const toggleSelectStock = (code: string) => {
-    setSelectedStocks(prev => 
-      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
-    );
-  };
-
   const renderCellValue = (stock: SelectionStock, column: typeof COLUMN_CONFIG[0]) => {
     const value = (stock as any)[column.key];
     if (value === null || value === undefined) return '-';
@@ -693,12 +677,8 @@ const SelectionPage: React.FC = () => {
   };
 
   const handleExport = () => {
-    const exportStocks = selectedStocks.length > 0 
-      ? filteredStockList.filter(stock => selectedStocks.includes(stock.code))
-      : filteredStockList;
-    
     const headers = COLUMN_CONFIG.map(col => col.label).join(',');
-    const rows = exportStocks.map(stock => {
+    const rows = filteredStockList.map(stock => {
       return COLUMN_CONFIG.map(col => {
         const value = (stock as any)[col.key];
         if (value === null || value === undefined) return '';
@@ -714,8 +694,7 @@ const SelectionPage: React.FC = () => {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    const exportCount = selectedStocks.length > 0 ? selectedStocks.length : '全部';
-    link.setAttribute('download', `selection_${selectedDate}_${exportCount}.csv`);
+    link.setAttribute('download', `selection_${selectedDate}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -782,21 +761,12 @@ const SelectionPage: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="sticky left-0 z-10 bg-gray-50 dark:bg-gray-800 px-3 py-3 text-left border-r border-gray-200 dark:border-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={filteredStockList.length > 0 && selectedStocks.length === filteredStockList.length}
-                        onChange={toggleSelectAll}
-                        className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
-                      />
-                    </th>
                     {COLUMN_CONFIG.map(column => (
                       <th
                         key={column.key}
                         className={`px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${column.width} ${
                           column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
-                        } ${(column.key === 'code' || column.key === 'name') ? 'sticky left-0 z-10 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700' : ''}`}
-                        style={column.key === 'code' ? { left: '52px' } : column.key === 'name' ? { left: '136px' } : {}}
+                        }`}
                       >
                         <div className="relative" ref={openColumnMenu === column.key ? columnMenuRef : null}>
                           <div className="flex items-center justify-center gap-1 cursor-pointer" onClick={() => setOpenColumnMenu(openColumnMenu === column.key ? null : column.key)}>
@@ -884,7 +854,7 @@ const SelectionPage: React.FC = () => {
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredStockList.length === 0 ? (
                     <tr>
-                      <td colSpan={COLUMN_CONFIG.length + 1} className="px-6 py-12 text-center">
+                      <td colSpan={COLUMN_CONFIG.length} className="px-6 py-12 text-center">
                       <EmptyState
                         title="暂无数据"
                         description="没有找到符合条件的股票数据"
@@ -894,19 +864,10 @@ const SelectionPage: React.FC = () => {
                   ) : (
                       filteredStockList.map(stock => (
                         <tr key={stock.code} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <td className="sticky left-0 z-10 bg-white dark:bg-gray-900 px-3 py-3 border-r border-gray-200 dark:border-gray-700">
-                            <input
-                              type="checkbox"
-                              checked={selectedStocks.includes(stock.code)}
-                              onChange={() => toggleSelectStock(stock.code)}
-                              className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
-                            />
-                          </td>
                           {COLUMN_CONFIG.map(column => (
                             <td
                               key={column.key}
-                              className={`px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-100 ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'} ${getValueColor((stock as any)[column.key], column.type)} ${(column.key === 'code' || column.key === 'name') ? 'sticky left-0 z-10 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700' : ''}`}
-                              style={column.key === 'code' ? { left: '52px' } : column.key === 'name' ? { left: '136px' } : {}}
+                              className={`px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-100 ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'} ${getValueColor((stock as any)[column.key], column.type)}`}
                             >
                               {column.key === 'code' || column.key === 'name' ? (
                                 <a

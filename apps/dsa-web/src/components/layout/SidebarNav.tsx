@@ -27,8 +27,9 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'home', label: '首页', to: '/', icon: Home, exact: true },
   { key: 'chat', label: '问股', to: '/chat', icon: MessageSquareQuote, badge: 'completion' },
   { key: 'portfolio', label: '持仓', to: '/portfolio', icon: BriefcaseBusiness },
-  { key: 'limitup', label: '涨停', to: '/limitup', icon: TrendingUp },
-  { key: 'backtest', label: '回测', to: '/backtest', icon: BarChart3 },
+  { key: 'select', label: '选股', to: '/select', icon: TrendingUp },
+  { key: 'limitup', label: '涨停', to: '/limitup', icon: BarChart3 },
+  { key: 'backtest', label: '回测', to: '/backtest', icon: BriefcaseBusiness },
   { key: 'alerts', label: '告警', to: '/alerts', icon: Bell },
   { key: 'settings', label: '设置', to: '/settings', icon: Settings2 },
 ];

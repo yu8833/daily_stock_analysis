@@ -10,6 +10,7 @@ import ChatPage from './pages/ChatPage';
 import PortfolioPage from './pages/PortfolioPage';
 import AlertsPage from './pages/AlertsPage';
 import LimitUpPage from './pages/LimitUpPage';
+import SelectionPage from './pages/SelectionPage';
 import { ApiErrorAlert, Shell } from './components/common';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useAgentChatStore } from './stores/agentChatStore';
@@ -69,6 +70,7 @@ const AppContent: React.FC = () => {
         <Route path="/backtest" element={<BacktestPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/limitup" element={<LimitUpPage />} />
+        <Route path="/select" element={<SelectionPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

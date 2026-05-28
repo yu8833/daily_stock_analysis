@@ -780,6 +780,515 @@ class StockLimitupReason(Base):
         }
 
 
+class StockSelection(Base):
+    """
+    选股数据模型
+    
+    存储综合选股数据，来源于东方财富网选股器
+    """
+    __tablename__ = 'stock_selection'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # 基本信息
+    date = Column(Date, nullable=False, index=True)  # 数据日期
+    code = Column(String(10), nullable=False, index=True)  # 股票代码
+    name = Column(String(50))  # 股票名称
+    
+    # 行情数据
+    new_price = Column(Float)  # 最新价
+    change_rate = Column(Float)  # 涨跌幅（%）
+    volume_ratio = Column(Float)  # 量比
+    high_price = Column(Float)  # 最高价
+    low_price = Column(Float)  # 最低价
+    pre_close_price = Column(Float)  # 昨收价
+    volume = Column(Float)  # 成交量
+    deal_amount = Column(Float)  # 成交额
+    turnoverrate = Column(Float)  # 换手率（%）
+    amplitude = Column(Float)  # 振幅
+    
+    # 基本面数据
+    listing_date = Column(Date)  # 上市时间
+    industry = Column(String(100))  # 行业
+    area = Column(String(50))  # 地区
+    concept = Column(Text)  # 概念（多个用逗号分隔）
+    style = Column(String(200))  # 风格
+    
+    # 指数成分
+    is_hs300 = Column(String(2))  # 沪深300
+    is_sz50 = Column(String(2))  # 上证50
+    is_zz500 = Column(String(2))  # 中证500
+    is_zz1000 = Column(String(2))  # 中证1000
+    is_cy50 = Column(String(2))  # 创业板50
+    
+    # 估值指标
+    pe = Column(Float)  # 市盈率
+    pe9 = Column(Float)  # 市盈率TTM
+    pbnewmrq = Column(Float)  # 市净率MRQ
+    pettmdeducted = Column(Float)  # 市盈率TTM扣非
+    ps9 = Column(Float)  # 市销率TTM
+    pcfjyxjl9 = Column(Float)  # 市现率TTM
+    predict_pe_syear = Column(Float)  # 预测市盈率今年
+    predict_pe_nyear = Column(Float)  # 预测市盈率明年
+    total_market_cap = Column(Float)  # 总市值
+    free_cap = Column(Float)  # 流通市值
+    dtsyl = Column(Float)  # 动态市盈率
+    ycpeg = Column(Float)  # 预测PEG
+    enterprise_value_multiple = Column(Float)  # 企业价值倍数
+    
+    # 每股指标
+    basic_eps = Column(Float)  # 每股收益
+    bvps = Column(Float)  # 每股净资产
+    per_netcash_operate = Column(Float)  # 每股经营现金流
+    per_fcfe = Column(Float)  # 每股自由现金流
+    per_capital_reserve = Column(Float)  # 每股资本公积
+    per_unassign_profit = Column(Float)  # 每股未分配利润
+    per_surplus_reserve = Column(Float)  # 每股盈余公积
+    per_retained_earning = Column(Float)  # 每股留存收益
+    
+    # 财务指标
+    parent_netprofit = Column(Float)  # 归属净利润
+    deduct_netprofit = Column(Float)  # 扣非净利润
+    total_operate_income = Column(Float)  # 营业总收入
+    roe_weight = Column(Float)  # 净资产收益率ROE(加权)
+    jroa = Column(Float)  # 总资产净利率ROA
+    roic = Column(Float)  # 投入资本回报率ROIC
+    zxgxl = Column(Float)  # 最新股息率
+    sale_gpr = Column(Float)  # 毛利率
+    sale_npr = Column(Float)  # 净利率
+    
+    # 增长率指标
+    netprofit_yoy_ratio = Column(Float)  # 净利润增长率
+    deduct_netprofit_growthrate = Column(Float)  # 扣非净利润增长率
+    toi_yoy_ratio = Column(Float)  # 营收增长率
+    netprofit_growthrate_3y = Column(Float)  # 净利润3年复合增长率
+    income_growthrate_3y = Column(Float)  # 营收3年复合增长率
+    predict_netprofit_ratio = Column(Float)  # 预测净利润同比增长
+    predict_income_ratio = Column(Float)  # 预测营收同比增长
+    basiceps_yoy_ratio = Column(Float)  # 每股收益同比增长率
+    total_profit_growthrate = Column(Float)  # 利润总额同比增长率
+    operate_profit_growthrate = Column(Float)  # 营业利润同比增长率
+    
+    # 偿债能力
+    debt_asset_ratio = Column(Float)  # 资产负债率
+    equity_ratio = Column(Float)  # 产权比率
+    equity_multiplier = Column(Float)  # 权益乘数
+    current_ratio = Column(Float)  # 流动比率
+    speed_ratio = Column(Float)  # 速动比率
+    
+    # 股本结构
+    total_shares = Column(Float)  # 总股本
+    free_shares = Column(Float)  # 流通股本
+    
+    # 股东信息
+    holder_newest = Column(Float)  # 最新股东户数
+    holder_ratio = Column(Float)  # 股东人数增长率
+    hold_amount = Column(Float)  # 户均持股金额
+    avg_hold_num = Column(Float)  # 户均持股数量
+    holdnum_growthrate_3q = Column(Float)  # 户均持股数季度增长率
+    holdnum_growthrate_hy = Column(Float)  # 户均持股数半年增长率
+    hold_ratio_count = Column(Float)  # 十大股东持股比例合计
+    free_hold_ratio = Column(Float)  # 十大流通股东比例合计
+    
+    # 技术指标信号
+    macd_golden_fork = Column(String(2))  # MACD金叉日线
+    macd_golden_forkz = Column(String(2))  # MACD金叉周线
+    macd_golden_forky = Column(String(2))  # MACD金叉月线
+    kdj_golden_fork = Column(String(2))  # KDJ金叉日线
+    kdj_golden_forkz = Column(String(2))  # KDJ金叉周线
+    kdj_golden_forky = Column(String(2))  # KDJ金叉月线
+    
+    # 突破信号
+    break_through = Column(String(2))  # 放量突破
+    low_funds_inflow = Column(String(2))  # 低位资金净流入
+    high_funds_outflow = Column(String(2))  # 高位资金净流出
+    breakup_ma_5days = Column(String(2))  # 向上突破均线5日
+    breakup_ma_10days = Column(String(2))  # 向上突破均线10日
+    breakup_ma_20days = Column(String(2))  # 向上突破均线20日
+    breakup_ma_30days = Column(String(2))  # 向上突破均线30日
+    breakup_ma_60days = Column(String(2))  # 向上突破均线60日
+    
+    # 均线排列
+    long_avg_array = Column(String(2))  # 均线多头排列
+    short_avg_array = Column(String(2))  # 均线空头排列
+    
+    # 量价关系
+    upper_large_volume = Column(String(2))  # 连涨放量
+    down_narrow_volume = Column(String(2))  # 下跌无量
+    
+    # K线形态
+    one_dayang_line = Column(String(2))  # 一根大阳线
+    two_dayang_lines = Column(String(2))  # 两根大阳线
+    rise_sun = Column(String(2))  # 旭日东升
+    power_fulgun = Column(String(2))  # 强势多方炮
+    restore_justice = Column(String(2))  # 拨云见日
+    down_7days = Column(String(2))  # 七连阴
+    upper_8days = Column(String(2))  # 八连阳
+    upper_9days = Column(String(2))  # 九连阳
+    upper_4days = Column(String(2))  # 四串阳
+    heaven_rule = Column(String(2))  # 天量法则
+    upside_volume = Column(String(2))  # 放量上攻
+    bearish_engulfing = Column(String(2))  # 穿头破脚
+    reversing_hammer = Column(String(2))  # 倒转锤头
+    shooting_star = Column(String(2))  # 射击之星
+    evening_star = Column(String(2))  # 黄昏之星
+    first_dawn = Column(String(2))  # 曙光初现
+    pregnant = Column(String(2))  # 身怀六甲
+    black_cloud_tops = Column(String(2))  # 乌云盖顶
+    morning_star = Column(String(2))  # 早晨之星
+    narrow_finish = Column(String(2))  # 窄幅整理
+    
+    # 限售和事件相关
+    limited_lift_f6m = Column(String(2))  # 限售解禁未来半年
+    limited_lift_f1y = Column(String(2))  # 限售解禁未来1年
+    limited_lift_6m = Column(String(2))  # 限售解禁近半年
+    limited_lift_1y = Column(String(2))  # 限售解禁近1年
+    directional_seo_1m = Column(String(2))  # 定向增发近1个月
+    directional_seo_3m = Column(String(2))  # 定向增发近3个月
+    directional_seo_6m = Column(String(2))  # 定向增发近6个月
+    directional_seo_1y = Column(String(2))  # 定向增发近1年
+    recapitalize_1m = Column(String(2))  # 资产重组近1个月
+    recapitalize_3m = Column(String(2))  # 资产重组近3个月
+    recapitalize_6m = Column(String(2))  # 资产重组近6个月
+    recapitalize_1y = Column(String(2))  # 资产重组近1年
+    equity_pledge_1m = Column(String(2))  # 股权质押近1个月
+    equity_pledge_3m = Column(String(2))  # 股权质押近3个月
+    equity_pledge_6m = Column(String(2))  # 股权质押近6个月
+    equity_pledge_1y = Column(String(2))  # 股权质押近1年
+    pledge_ratio = Column(Float)  # 质押比例
+    goodwill_scale = Column(Float)  # 商誉规模
+    goodwill_assets_ratro = Column(Float)  # 商誉占净资产比例
+    predict_type = Column(String(10))  # 业绩预告
+    par_dividend_pretax = Column(Float)  # 每股股利税前
+    par_dividend = Column(Float)  # 每股红股
+    par_it_equity = Column(Float)  # 每股转增股本
+    holder_change_3m = Column(Float)  # 近3月股东增减比例
+    executive_change_3m = Column(Float)  # 近3月高管增减比例
+    org_survey_3m = Column(Integer)  # 近3月机构调研
+    org_rating = Column(String(10))  # 机构评级
+    
+    # 机构持股
+    allcorp_num = Column(Integer)  # 机构持股家数合计
+    allcorp_fund_num = Column(Integer)  # 基金持股家数
+    allcorp_qs_num = Column(Integer)  # 券商持股家数
+    allcorp_qfii_num = Column(Integer)  # QFII持股家数
+    allcorp_bx_num = Column(Integer)  # 保险公司持股家数
+    allcorp_sb_num = Column(Integer)  # 社保持股家数
+    allcorp_xt_num = Column(Integer)  # 信托公司持股家数
+    allcorp_ratio = Column(Float)  # 机构持股比例合计
+    allcorp_fund_ratio = Column(Float)  # 基金持股比例
+    allcorp_qs_ratio = Column(Float)  # 券商持股比例
+    allcorp_qfii_ratio = Column(Float)  # QFII持股比例
+    allcorp_bx_ratio = Column(Float)  # 保险公司持股比例
+    allcorp_sb_ratio = Column(Float)  # 社保持股比例
+    allcorp_xt_ratio = Column(Float)  # 信托公司持股比例
+    
+    # 人气排名
+    popularity_rank = Column(Integer)  # 股吧人气排名
+    rank_change = Column(Integer)  # 人气排名变化
+    upp_days = Column(Integer)  # 人气排名连涨
+    down_days = Column(Integer)  # 人气排名连跌
+    new_high = Column(Integer)  # 人气排名创新高
+    new_down = Column(Integer)  # 人气排名创新低
+    newfans_ratio = Column(Float)  # 新晋粉丝占比
+    bigfans_ratio = Column(Float)  # 铁杆粉丝占比
+    concern_rank_7days = Column(Integer)  # 7日关注排名
+    browse_rank = Column(Integer)  # 今日浏览排名
+    
+    # 破净和新高
+    is_issue_break = Column(String(2))  # 破发股票
+    is_bps_break = Column(String(2))  # 破净股票
+    now_newhigh = Column(String(2))  # 今日创历史新高
+    now_newlow = Column(String(2))  # 今日创历史新低
+    high_recent_3days = Column(String(2))  # 近期创历史新高近3日
+    high_recent_5days = Column(String(2))  # 近期创历史新高近5日
+    high_recent_10days = Column(String(2))  # 近期创历史新高近10日
+    high_recent_20days = Column(String(2))  # 近期创历史新高近20日
+    high_recent_30days = Column(String(2))  # 近期创历史新高近30日
+    low_recent_3days = Column(String(2))  # 近期创历史新低近3日
+    low_recent_5days = Column(String(2))  # 近期创历史新低近5日
+    low_recent_10days = Column(String(2))  # 近期创历史新低近10日
+    low_recent_20days = Column(String(2))  # 近期创历史新低近20日
+    low_recent_30days = Column(String(2))  # 近期创历史新低近30日
+    
+    # 跑赢大盘
+    win_market_3days = Column(String(2))  # 近期跑赢大盘近3日
+    win_market_5days = Column(String(2))  # 近期跑赢大盘近5日
+    win_market_10days = Column(String(2))  # 近期跑赢大盘近10日
+    win_market_20days = Column(String(2))  # 近期跑赢大盘近20日
+    win_market_30days = Column(String(2))  # 近期跑赢大盘近30日
+    
+    # 资金流入
+    net_inflow = Column(Float)  # 当日净流入额
+    netinflow_3days = Column(Float)  # 3日主力净流入
+    netinflow_5days = Column(Float)  # 5日主力净流入
+    nowinterst_ratio = Column(Float)  # 当日增仓占比
+    nowinterst_ratio_3d = Column(Float)  # 3日增仓占比
+    nowinterst_ratio_5d = Column(Float)  # 5日增仓占比
+    ddx = Column(Float)  # 当日DDX
+    ddx_3d = Column(Float)  # 3日DDX
+    ddx_5d = Column(Float)  # 5日DDX
+    ddx_red_10d = Column(Integer)  # 10日内DDX飘红天数
+    
+    # 涨跌幅和天数
+    changerate_3days = Column(Float)  # 3日涨跌幅
+    changerate_5days = Column(Float)  # 5日涨跌幅
+    changerate_10days = Column(Float)  # 10日涨跌幅
+    changerate_ty = Column(Float)  # 今年以来涨跌幅
+    upnday = Column(Integer)  # 连涨天数
+    downnday = Column(Integer)  # 连跌天数
+    
+    # 上市相关
+    listing_yield_year = Column(Float)  # 上市以来年化收益率
+    listing_volatility_year = Column(Float)  # 上市以来年化波动率
+    
+    # 沪深股通
+    mutual_netbuy_amt = Column(Float)  # 沪深股通净买入金额
+    hold_ratio = Column(Float)  # 沪深股通持股比例
+    
+    # 均线数据
+    ma5 = Column(Float)  # 5日均线
+    ma10 = Column(Float)  # 10日均线
+    ma20 = Column(Float)  # 20日均线
+    ma60 = Column(Float)  # 60日均线
+    ma120 = Column(Float)  # 120日均线
+    ma250 = Column(Float)  # 250日均线
+    
+    # 更新时间
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # 唯一约束：同一股票同一日期只能有一条数据
+    __table_args__ = (
+        UniqueConstraint('code', 'date', name='uix_selection_code_date'),
+        Index('ix_selection_date', 'date'),
+        Index('ix_selection_industry', 'industry'),
+    )
+    
+    def __repr__(self):
+        return f"<StockSelection(code={self.code}, date={self.date}, name={self.name})>"
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典"""
+        return {
+            'id': self.id,
+            'date': self.date.isoformat() if self.date else None,
+            'code': self.code,
+            'name': self.name,
+            'new_price': self.new_price,
+            'change_rate': self.change_rate,
+            'volume_ratio': self.volume_ratio,
+            'high_price': self.high_price,
+            'low_price': self.low_price,
+            'pre_close_price': self.pre_close_price,
+            'volume': self.volume,
+            'deal_amount': self.deal_amount,
+            'turnoverrate': self.turnoverrate,
+            'amplitude': self.amplitude,
+            'listing_date': self.listing_date.isoformat() if self.listing_date else None,
+            'industry': self.industry,
+            'area': self.area,
+            'concept': self.concept,
+            'style': self.style,
+            'is_hs300': self.is_hs300,
+            'is_sz50': self.is_sz50,
+            'is_zz500': self.is_zz500,
+            'is_zz1000': self.is_zz1000,
+            'is_cy50': self.is_cy50,
+            'pe': self.pe,
+            'pe9': self.pe9,
+            'pbnewmrq': self.pbnewmrq,
+            'pettmdeducted': self.pettmdeducted,
+            'ps9': self.ps9,
+            'pcfjyxjl9': self.pcfjyxjl9,
+            'predict_pe_syear': self.predict_pe_syear,
+            'predict_pe_nyear': self.predict_pe_nyear,
+            'total_market_cap': self.total_market_cap,
+            'free_cap': self.free_cap,
+            'dtsyl': self.dtsyl,
+            'ycpeg': self.ycpeg,
+            'enterprise_value_multiple': self.enterprise_value_multiple,
+            'basic_eps': self.basic_eps,
+            'bvps': self.bvps,
+            'per_netcash_operate': self.per_netcash_operate,
+            'per_fcfe': self.per_fcfe,
+            'per_capital_reserve': self.per_capital_reserve,
+            'per_unassign_profit': self.per_unassign_profit,
+            'per_surplus_reserve': self.per_surplus_reserve,
+            'per_retained_earning': self.per_retained_earning,
+            'parent_netprofit': self.parent_netprofit,
+            'deduct_netprofit': self.deduct_netprofit,
+            'total_operate_income': self.total_operate_income,
+            'roe_weight': self.roe_weight,
+            'jroa': self.jroa,
+            'roic': self.roic,
+            'zxgxl': self.zxgxl,
+            'sale_gpr': self.sale_gpr,
+            'sale_npr': self.sale_npr,
+            'netprofit_yoy_ratio': self.netprofit_yoy_ratio,
+            'deduct_netprofit_growthrate': self.deduct_netprofit_growthrate,
+            'toi_yoy_ratio': self.toi_yoy_ratio,
+            'netprofit_growthrate_3y': self.netprofit_growthrate_3y,
+            'income_growthrate_3y': self.income_growthrate_3y,
+            'predict_netprofit_ratio': self.predict_netprofit_ratio,
+            'predict_income_ratio': self.predict_income_ratio,
+            'basiceps_yoy_ratio': self.basiceps_yoy_ratio,
+            'total_profit_growthrate': self.total_profit_growthrate,
+            'operate_profit_growthrate': self.operate_profit_growthrate,
+            'debt_asset_ratio': self.debt_asset_ratio,
+            'equity_ratio': self.equity_ratio,
+            'equity_multiplier': self.equity_multiplier,
+            'current_ratio': self.current_ratio,
+            'speed_ratio': self.speed_ratio,
+            'total_shares': self.total_shares,
+            'free_shares': self.free_shares,
+            'holder_newest': self.holder_newest,
+            'holder_ratio': self.holder_ratio,
+            'hold_amount': self.hold_amount,
+            'avg_hold_num': self.avg_hold_num,
+            'holdnum_growthrate_3q': self.holdnum_growthrate_3q,
+            'holdnum_growthrate_hy': self.holdnum_growthrate_hy,
+            'hold_ratio_count': self.hold_ratio_count,
+            'free_hold_ratio': self.free_hold_ratio,
+            'macd_golden_fork': self.macd_golden_fork,
+            'macd_golden_forkz': self.macd_golden_forkz,
+            'macd_golden_forky': self.macd_golden_forky,
+            'kdj_golden_fork': self.kdj_golden_fork,
+            'kdj_golden_forkz': self.kdj_golden_forkz,
+            'kdj_golden_forky': self.kdj_golden_forky,
+            'break_through': self.break_through,
+            'low_funds_inflow': self.low_funds_inflow,
+            'high_funds_outflow': self.high_funds_outflow,
+            'breakup_ma_5days': self.breakup_ma_5days,
+            'breakup_ma_10days': self.breakup_ma_10days,
+            'breakup_ma_20days': self.breakup_ma_20days,
+            'breakup_ma_30days': self.breakup_ma_30days,
+            'breakup_ma_60days': self.breakup_ma_60days,
+            'long_avg_array': self.long_avg_array,
+            'short_avg_array': self.short_avg_array,
+            'upper_large_volume': self.upper_large_volume,
+            'down_narrow_volume': self.down_narrow_volume,
+            'one_dayang_line': self.one_dayang_line,
+            'two_dayang_lines': self.two_dayang_lines,
+            'rise_sun': self.rise_sun,
+            'power_fulgun': self.power_fulgun,
+            'restore_justice': self.restore_justice,
+            'down_7days': self.down_7days,
+            'upper_8days': self.upper_8days,
+            'upper_9days': self.upper_9days,
+            'upper_4days': self.upper_4days,
+            'heaven_rule': self.heaven_rule,
+            'upside_volume': self.upside_volume,
+            'bearish_engulfing': self.bearish_engulfing,
+            'reversing_hammer': self.reversing_hammer,
+            'shooting_star': self.shooting_star,
+            'evening_star': self.evening_star,
+            'first_dawn': self.first_dawn,
+            'pregnant': self.pregnant,
+            'black_cloud_tops': self.black_cloud_tops,
+            'morning_star': self.morning_star,
+            'narrow_finish': self.narrow_finish,
+            'limited_lift_f6m': self.limited_lift_f6m,
+            'limited_lift_f1y': self.limited_lift_f1y,
+            'limited_lift_6m': self.limited_lift_6m,
+            'limited_lift_1y': self.limited_lift_1y,
+            'directional_seo_1m': self.directional_seo_1m,
+            'directional_seo_3m': self.directional_seo_3m,
+            'directional_seo_6m': self.directional_seo_6m,
+            'directional_seo_1y': self.directional_seo_1y,
+            'recapitalize_1m': self.recapitalize_1m,
+            'recapitalize_3m': self.recapitalize_3m,
+            'recapitalize_6m': self.recapitalize_6m,
+            'recapitalize_1y': self.recapitalize_1y,
+            'equity_pledge_1m': self.equity_pledge_1m,
+            'equity_pledge_3m': self.equity_pledge_3m,
+            'equity_pledge_6m': self.equity_pledge_6m,
+            'equity_pledge_1y': self.equity_pledge_1y,
+            'pledge_ratio': self.pledge_ratio,
+            'goodwill_scale': self.goodwill_scale,
+            'goodwill_assets_ratro': self.goodwill_assets_ratro,
+            'predict_type': self.predict_type,
+            'par_dividend_pretax': self.par_dividend_pretax,
+            'par_dividend': self.par_dividend,
+            'par_it_equity': self.par_it_equity,
+            'holder_change_3m': self.holder_change_3m,
+            'executive_change_3m': self.executive_change_3m,
+            'org_survey_3m': self.org_survey_3m,
+            'org_rating': self.org_rating,
+            'allcorp_num': self.allcorp_num,
+            'allcorp_fund_num': self.allcorp_fund_num,
+            'allcorp_qs_num': self.allcorp_qs_num,
+            'allcorp_qfii_num': self.allcorp_qfii_num,
+            'allcorp_bx_num': self.allcorp_bx_num,
+            'allcorp_sb_num': self.allcorp_sb_num,
+            'allcorp_xt_num': self.allcorp_xt_num,
+            'allcorp_ratio': self.allcorp_ratio,
+            'allcorp_fund_ratio': self.allcorp_fund_ratio,
+            'allcorp_qs_ratio': self.allcorp_qs_ratio,
+            'allcorp_qfii_ratio': self.allcorp_qfii_ratio,
+            'allcorp_bx_ratio': self.allcorp_bx_ratio,
+            'allcorp_sb_ratio': self.allcorp_sb_ratio,
+            'allcorp_xt_ratio': self.allcorp_xt_ratio,
+            'popularity_rank': self.popularity_rank,
+            'rank_change': self.rank_change,
+            'upp_days': self.upp_days,
+            'down_days': self.down_days,
+            'new_high': self.new_high,
+            'new_down': self.new_down,
+            'newfans_ratio': self.newfans_ratio,
+            'bigfans_ratio': self.bigfans_ratio,
+            'concern_rank_7days': self.concern_rank_7days,
+            'browse_rank': self.browse_rank,
+            'is_issue_break': self.is_issue_break,
+            'is_bps_break': self.is_bps_break,
+            'now_newhigh': self.now_newhigh,
+            'now_newlow': self.now_newlow,
+            'high_recent_3days': self.high_recent_3days,
+            'high_recent_5days': self.high_recent_5days,
+            'high_recent_10days': self.high_recent_10days,
+            'high_recent_20days': self.high_recent_20days,
+            'high_recent_30days': self.high_recent_30days,
+            'low_recent_3days': self.low_recent_3days,
+            'low_recent_5days': self.low_recent_5days,
+            'low_recent_10days': self.low_recent_10days,
+            'low_recent_20days': self.low_recent_20days,
+            'low_recent_30days': self.low_recent_30days,
+            'win_market_3days': self.win_market_3days,
+            'win_market_5days': self.win_market_5days,
+            'win_market_10days': self.win_market_10days,
+            'win_market_20days': self.win_market_20days,
+            'win_market_30days': self.win_market_30days,
+            'net_inflow': self.net_inflow,
+            'netinflow_3days': self.netinflow_3days,
+            'netinflow_5days': self.netinflow_5days,
+            'nowinterst_ratio': self.nowinterst_ratio,
+            'nowinterst_ratio_3d': self.nowinterst_ratio_3d,
+            'nowinterst_ratio_5d': self.nowinterst_ratio_5d,
+            'ddx': self.ddx,
+            'ddx_3d': self.ddx_3d,
+            'ddx_5d': self.ddx_5d,
+            'ddx_red_10d': self.ddx_red_10d,
+            'changerate_3days': self.changerate_3days,
+            'changerate_5days': self.changerate_5days,
+            'changerate_10days': self.changerate_10days,
+            'changerate_ty': self.changerate_ty,
+            'upnday': self.upnday,
+            'downnday': self.downnday,
+            'listing_yield_year': self.listing_yield_year,
+            'listing_volatility_year': self.listing_volatility_year,
+            'mutual_netbuy_amt': self.mutual_netbuy_amt,
+            'hold_ratio': self.hold_ratio,
+            'ma5': self.ma5,
+            'ma10': self.ma10,
+            'ma20': self.ma20,
+            'ma60': self.ma60,
+            'ma120': self.ma120,
+            'ma250': self.ma250,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
 class DatabaseManager:
     """
     数据库管理器 - 单例模式

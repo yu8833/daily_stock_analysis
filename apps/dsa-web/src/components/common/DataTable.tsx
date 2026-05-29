@@ -131,7 +131,7 @@ export function DataTable<T>({
                       <td
                         key={String(column.key)}
                         className={`table-cell ${
-                          column.type !== 'text' && column.type !== 'flag' && !column.render ? 'whitespace-nowrap' : ''
+                          column.render ? '' : 'whitespace-nowrap'
                         } ${
                           column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
                         } ${cellColor} ${isSticky ? 'sticky left-0 z-10 bg-white dark:bg-gray-900' : ''}`}

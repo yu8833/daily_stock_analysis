@@ -138,7 +138,10 @@ def get_limit_up_data(
         # 检查当天查询时是否在开盘时间前（9:30之前）
         if query_date == date_class.today():
             now = datetime.now()
-            if not is_market_open_time(now):
+            current_time = now.time()
+            # 只在9:30之前显示"未到开盘时间"的提示
+            # 9:30之后（包括收盘后）都应该尝试获取数据
+            if current_time < MARKET_OPEN_TIME:
                 return {
                     "date": query_date.strftime('%Y-%m-%d'),
                     "count": 0,

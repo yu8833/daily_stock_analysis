@@ -21,6 +21,7 @@ interface DataTableProps<T> {
   expandedRow?: React.ReactNode | null;
   rowKey: (row: T) => string;
   rowClassName?: (row: T) => string;
+  stickyColumns?: (keyof T)[];
 }
 
 export function DataTable<T>({
@@ -40,6 +41,7 @@ export function DataTable<T>({
   expandedRow,
   rowKey,
   rowClassName,
+  stickyColumns = [],
 }: DataTableProps<T>) {
   const isAllSelected = data.length > 0 && selectedCodes.size === data.length;
 
@@ -52,51 +54,55 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-800">
-          <tr>
+    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800 rounded-xl">
+      <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+        <thead>
+          <tr className="table-header-cell">
             {selectable && (
-              <th className="w-12 px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="w-14 px-4 py-4 text-center sticky left-0 z-10 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
                 <Checkbox
                   checked={isAllSelected}
                   onChange={onSelectAll}
                 />
               </th>
             )}
-            {columns.map(column => (
+            {columns.map(column => {
+              const isSticky = stickyColumns.includes(column.key);
+              return (
               <th
                 key={String(column.key)}
-                className={`px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${column.width} ${
+                className={`px-4 py-4 ${column.width} ${
                   column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
-                }`}
+                } ${isSticky ? 'sticky left-0 z-10 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900' : ''}`}
               >
                 {onSort ? (
                   <button
                     type="button"
                     onClick={() => onSort(String(column.key))}
-                    className="flex items-center justify-center gap-1 cursor-pointer"
+                    className="flex items-center justify-center gap-2 cursor-pointer hover:text-primary transition-colors duration-200"
                   >
-                    <span>{column.label}</span>
+                    <span className="font-semibold">{column.label}</span>
                     {sortField === String(column.key) && (
-                      sortOrder === 'asc' ? (
-                        <ArrowUp size={14} className="text-blue-500" />
-                      ) : (
-                        <ArrowDown size={14} className="text-blue-500" />
-                      )
+                      <span className="text-primary">
+                        {sortOrder === 'asc' ? (
+                          <ArrowUp size={16} />
+                        ) : (
+                          <ArrowDown size={16} />
+                        )}
+                      </span>
                     )}
                   </button>
                 ) : (
-                  <span>{column.label}</span>
+                  <span className="font-semibold">{column.label}</span>
                 )}
               </th>
-            ))}
+            )})}
           </tr>
         </thead>
-        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody className="bg-white dark:bg-gray-900">
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-6 py-12 text-center">
+              <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-6 py-16 text-center">
                 <EmptyState
                   title={emptyText}
                   description={emptyDescription || ''}
@@ -104,11 +110,11 @@ export function DataTable<T>({
               </td>
             </tr>
           ) : (
-            data.map(row => (
+            data.map((row, index) => (
               <React.Fragment key={rowKey(row)}>
-                <tr className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${rowClassName ? rowClassName(row) : ''}`}>
+                <tr className={`table-row ${rowClassName ? rowClassName(row) : ''}`} style={{ animationDelay: `${index * 50}ms` }}>
                   {selectable && (
-                    <td className="px-3 py-3">
+                    <td className="table-cell text-center sticky left-0 z-10 bg-white dark:bg-gray-900">
                       <Checkbox
                         checked={selectedCodes.has(rowKey(row))}
                         onChange={() => onSelectRow(rowKey(row))}
@@ -119,28 +125,33 @@ export function DataTable<T>({
                     const value = row[column.key];
                     const isLinkColumn = linkColumns.includes(column.key);
                     const cellColor = getValueColor(value as number, column.type);
+                    const isSticky = stickyColumns.includes(column.key);
 
                     return (
                       <td
                         key={String(column.key)}
-                        className={`px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-100 ${
+                        className={`table-cell ${
+                          column.type !== 'text' && column.type !== 'flag' && !column.render ? 'whitespace-nowrap' : ''
+                        } ${
                           column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
-                        } ${cellColor} ${column.type !== 'text' && column.type !== 'flag' ? 'whitespace-nowrap' : ''}`}
+                        } ${cellColor} ${isSticky ? 'sticky left-0 z-10 bg-white dark:bg-gray-900' : ''}`}
                       >
                         {isLinkColumn ? (
                           <a
                             href={getEastMoneyUrl(String(value))}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
+                            className="text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors duration-200 hover:underline"
                           >
-                            {formatCellValue(value, column)}
-                            {column.key === 'code' && <ExternalLink size={12} />}
+                            <span className="font-medium">{formatCellValue(value, column)}</span>
+                            {column.key === 'code' && <ExternalLink size={12} className="opacity-60" />}
                           </a>
                         ) : column.render ? (
                           column.render(value, row)
                         ) : (
-                          formatCellValue(value, column)
+                          <span className={`${column.type === 'flag' ? 'font-medium' : ''}`}>
+                            {formatCellValue(value, column)}
+                          </span>
                         )}
                       </td>
                     );
@@ -148,8 +159,10 @@ export function DataTable<T>({
                 </tr>
                 {expandedRow && (
                   <tr>
-                    <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-6 py-4 bg-blue-50 dark:bg-blue-900/30 border-t border-blue-200 dark:border-blue-800">
-                      {expandedRow}
+                    <td colSpan={columns.length + (selectable ? 1 : 0)} className="bg-gradient-to-r from-blue-50/80 to-cyan-50/80 dark:from-blue-900/40 dark:to-cyan-900/40 border-t border-blue-100 dark:border-blue-800">
+                      <div className="px-6 py-4">
+                        {expandedRow}
+                      </div>
                     </td>
                   </tr>
                 )}

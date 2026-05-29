@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, Badge, EmptyState, Loading, Checkbox } from '../components/common';
-import { Search, ExternalLink, ArrowUp, ArrowDown, Download } from 'lucide-react';
+import { Card, Badge, Button } from '../components/common';
+import { Download, X, BarChart3 } from 'lucide-react';
+import { DataTable } from '../components/common/DataTable';
+import { TablePagination } from '../components/common/TablePagination';
+import type { ColumnConfig } from '../utils/format';
+import { getTodayIso } from '../utils/format';
 
 interface SelectionStock {
   code: string;
@@ -203,7 +207,7 @@ interface SelectionStock {
 type SortField = keyof SelectionStock;
 type SortOrder = 'asc' | 'desc';
 
-const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'left' | 'right' | 'center'; type: 'text' | 'number' | 'percent' | 'money' | 'price' | 'date' | 'flag' }[] = [
+const COLUMN_CONFIG: ColumnConfig<SelectionStock>[] = [
   { key: 'code', label: '代码', width: 'w-16', align: 'left', type: 'text' },
   { key: 'name', label: '名称', width: 'w-20', align: 'left', type: 'text' },
   { key: 'is_hs300', label: '沪深300', width: 'w-16', align: 'center', type: 'flag' },
@@ -398,52 +402,6 @@ const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'lef
   { key: 'hold_ratio', label: '沪深股通持股比例', width: 'w-28', align: 'right', type: 'percent' },
 ];
 
-const formatPct = (value: number | null): string => {
-  if (value === null || value === undefined) return '-';
-  const formatted = value >= 0 ? `+${value.toFixed(2)}%` : `${value.toFixed(2)}%`;
-  return formatted;
-};
-
-const formatNumber = (value: number | null): string => {
-  if (value === null || value === undefined) return '-';
-  if (Math.abs(value) >= 100000000) {
-    return `${(value / 100000000).toFixed(2)}亿`;
-  }
-  if (Math.abs(value) >= 10000) {
-    return `${(value / 10000).toFixed(2)}万`;
-  }
-  return value.toFixed(0);
-};
-
-const formatMoney = (value: number | null): string => {
-  if (value === null || value === undefined) return '-';
-  if (Math.abs(value) >= 100000000) {
-    return `${(value / 100000000).toFixed(2)}亿`;
-  }
-  if (Math.abs(value) >= 10000) {
-    return `${(value / 10000).toFixed(2)}万`;
-  }
-  return value.toFixed(2);
-};
-
-const formatPrice = (value: number | null): string => {
-  if (value === null || value === undefined) return '-';
-  return value.toFixed(2);
-};
-
-const getEastMoneyUrl = (code: string): string => {
-  if (code.startsWith('6') || code.startsWith('5') || code.startsWith('9')) {
-    return `https://quote.eastmoney.com/sh${code}.html`;
-  } else {
-    return `https://quote.eastmoney.com/sz${code}.html`;
-  }
-};
-
-const getTodayIso = (): string => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-};
-
 const SelectionPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -462,6 +420,7 @@ const SelectionPage: React.FC = () => {
   }, [searchParams]);
   const [stockList, setStockList] = useState<SelectionStock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -485,6 +444,7 @@ const SelectionPage: React.FC = () => {
 
   const fetchSelectionData = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({
         date: selectedDate,
@@ -509,6 +469,7 @@ const SelectionPage: React.FC = () => {
       setTotalPages(result.total_pages || 0);
     } catch (err) {
       console.error('获取选股数据失败:', err);
+      setError('获取选股数据失败，请稍后重试');
     } finally {
       setIsLoading(false);
     }
@@ -529,16 +490,16 @@ const SelectionPage: React.FC = () => {
     }
   };
 
-  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPageSize(Number(e.target.value));
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
     setCurrentPage(1);
   };
 
-  const handleColumnSort = (field: SortField) => {
+  const handleColumnSort = (field: string) => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortField(field);
+      setSortField(field as SortField);
       setSortOrder('desc');
     }
   };
@@ -590,269 +551,146 @@ const SelectionPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  const renderCellValue = (stock: SelectionStock, column: typeof COLUMN_CONFIG[0]) => {
-    const value = (stock as any)[column.key];
-    if (value === null || value === undefined) return '-';
-
-    switch (column.type) {
-      case 'price':
-        return formatPrice(value);
-      case 'percent':
-        return formatPct(value);
-      case 'money':
-        return formatMoney(value);
-      case 'number':
-        return formatNumber(value);
-      case 'flag':
-        if (value === '1' || value === '是') {
-          return <Badge variant="success">是</Badge>;
-        } else if (value === '0' || value === '否') {
-          return <Badge variant="default">否</Badge>;
-        } else {
-          return '-';
-        }
-      default:
-        return String(value);
+  const customColumns = COLUMN_CONFIG.map((col) => {
+    if (col.type === 'flag') {
+      return {
+        ...col,
+        render: (value: any) => {
+          if (value === 'Y' || value === '1' || value === 1 || value === '是') {
+            return <Badge variant="success">是</Badge>;
+          } else if (value === 'N' || value === '0' || value === 0 || value === '否') {
+            return <Badge variant="default">否</Badge>;
+          } else {
+            return '-';
+          }
+        },
+      };
     }
-  };
-
-  const getValueColor = (value: number | null, type: string) => {
-    if (type === 'percent' && value !== null) {
-      if (value > 0) return 'text-red-600 dark:text-red-400';
-      if (value < 0) return 'text-green-600 dark:text-green-400';
-    }
-    return '';
-  };
+    return col;
+  });
 
   return (
-    <div className="limitup-page min-h-screen space-y-4 p-4 md:p-6">
-      <section className="space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-success/10">
-            <Search className="w-6 h-6 text-success" />
+    <div className="min-h-screen space-y-6 p-4 md:p-6 bg-gradient-to-br from-gray-50/50 to-purple-50/30 dark:from-gray-900 dark:to-gray-800">
+      <section className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="page-title-icon bg-gradient-to-br from-purple-500/10 to-indigo-500/10">
+            <BarChart3 className="w-8 h-8 text-purple-500" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-semibold text-foreground">综合选股</h1>
-            <p className="text-xs md:text-sm text-secondary">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              综合选股
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
               根据多种指标筛选股票，支持升序降序排列
             </p>
           </div>
         </div>
 
-        <Card padding="md">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="text-sm text-secondary">选择日期</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  setSearchParams({ date: e.target.value });
-                }}
-                className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none"
-                max={getTodayIso()}
-              />
-              <label className="text-sm text-secondary">关键字</label>
-              <input
-                type="text"
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="代码/名称/行业/概念..."
-                className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none w-48"
-              />
-              {searchKeyword && (
-                <button
-                  type="button"
-                  onClick={() => setSearchKeyword('')}
-                  className="text-xs text-secondary hover:text-primary"
-                >
-                  清除
-                </button>
-              )}
-              <button
-                type="button"
+        <Card className="filter-card">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">日期:</span>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    setSearchParams({ date: e.target.value });
+                  }}
+                  className="input-enhanced w-40"
+                  max={getTodayIso()}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">搜索:</span>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    placeholder="代码/名称/行业..."
+                    className="input-enhanced pl-3 pr-8 w-56"
+                  />
+                  {searchKeyword && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchKeyword('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5 text-gray-400" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                variant="secondary"
                 onClick={handleExport}
-                className="btn-secondary h-10 px-3 flex items-center gap-2"
+                className="btn-with-icon"
               >
-                <Download size={14} />
-                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出全部'}
-              </button>
+                <Download size={16} />
+                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出'}
+              </Button>
             </div>
-            <Badge variant="success">{totalCount} 只股票</Badge>
+
+            <div className="stat-badge bg-gradient-to-r from-purple-500 to-indigo-500 text-white">
+              <BarChart3 size={16} className="mr-1" />
+              {totalCount} 只股票
+            </div>
           </div>
         </Card>
       </section>
 
-      <Card>
-        {isLoading ? (
-          <div className="flex items-center justify-center min-h-[400px] py-12">
-            <Loading label="获取股票数据中..." />
+      {error ? (
+        <Card>
+          <div className="text-center py-16">
+            <div className="text-4xl mb-4">⚠️</div>
+            <p className="text-red-600 dark:text-red-400 text-lg font-medium mb-4">{error}</p>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setCurrentPage(1);
+                void fetchSelectionData();
+              }}
+            >
+              重新加载
+            </Button>
           </div>
-        ) : (
-          <div className="relative">
-            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="w-12 px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      <Checkbox
-                        checked={stockList.length > 0 && selectedCodes.size === stockList.length}
-                        onChange={handleSelectAll}
-                      />
-                    </th>
-                    {COLUMN_CONFIG.map(column => (
-                      <th
-                        key={column.key}
-                        className={`px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${column.width} ${
-                          column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleColumnSort(column.key)}
-                          className="flex items-center justify-center gap-1 cursor-pointer"
-                        >
-                          <span>{column.label}</span>
-                          {sortField === column.key && (
-                            sortOrder === 'asc' ? (
-                              <ArrowUp size={14} className="text-blue-500" />
-                            ) : (
-                              <ArrowDown size={14} className="text-blue-500" />
-                            )
-                          )}
-                        </button>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {stockList.length === 0 ? (
-                    <tr>
-                      <td colSpan={COLUMN_CONFIG.length + 1} className="px-6 py-12 text-center">
-                      <EmptyState
-                        title="暂无数据"
-                        description="没有找到符合条件的股票数据"
-                      />
-                      </td>
-                    </tr>
-                  ) : (
-                      stockList.map(stock => (
-                        <tr key={stock.code} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <td className="px-3 py-3">
-                            <Checkbox
-                              checked={selectedCodes.has(stock.code)}
-                              onChange={() => handleSelectRow(stock.code)}
-                            />
-                          </td>
-                          {COLUMN_CONFIG.map(column => (
-                            <td
-                              key={column.key}
-                              className={`px-3 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-100 ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'} ${getValueColor((stock as any)[column.key], column.type)}`}
-                            >
-                              {column.key === 'code' || column.key === 'name' ? (
-                                <a
-                                  href={getEastMoneyUrl(stock.code)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
-                                >
-                                  {renderCellValue(stock, column)}
-                                  {column.key === 'code' && <ExternalLink size={12} />}
-                                </a>
-                              ) : (
-                                renderCellValue(stock, column)
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      ))
-                    )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <Card>
+          <DataTable
+            columns={customColumns}
+            data={stockList}
+            loading={isLoading}
+            emptyText="暂无数据"
+            emptyDescription="没有找到符合条件的股票数据"
+            selectable
+            selectedCodes={selectedCodes}
+            onSelectAll={handleSelectAll}
+            onSelectRow={handleSelectRow}
+            sortField={String(sortField)}
+            sortOrder={sortOrder}
+            onSort={handleColumnSort}
+            linkColumns={['code', 'name']}
+            rowKey={(row) => row.code}
+            stickyColumns={['code', 'name']}
+          />
+        </Card>
+      )}
 
-      {stockList.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-white/10">
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-secondary">
-                  共 {totalCount} 条记录
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-secondary">每页显示:</span>
-                  <select
-                    value={pageSize}
-                    onChange={handlePageSizeChange}
-                    className="input-surface input-focus-glow h-8 rounded border bg-transparent px-2 text-sm"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <span className="text-sm text-secondary">条</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="btn-secondary h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  上一页
-                </button>
-                
-                {(() => {
-                  const visiblePages = 5;
-                  let start = 1;
-                  
-                  if (totalPages > visiblePages) {
-                    if (currentPage <= 3) {
-                      start = 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      start = totalPages - 4;
-                    } else {
-                      start = currentPage - 2;
-                    }
-                  }
-                  
-                  const pageNumbers = [];
-                  for (let i = 0; i < visiblePages && start + i <= totalPages; i++) {
-                    pageNumbers.push(start + i);
-                  }
-                  
-                  return pageNumbers.map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      type="button"
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`h-8 w-8 px-2 rounded ${
-                        currentPage === pageNum
-                          ? 'bg-primary text-white'
-                          : 'btn-secondary'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  ));
-                })()}
-                
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="btn-secondary h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  下一页
-                </button>
-              </div>
-            </div>
-          )}
+      {stockList.length > 0 && totalPages > 1 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
     </div>
   );
 };

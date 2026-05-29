@@ -590,6 +590,77 @@ def get_selection_data(
                 "win_market_20days": str(item.win_market_20days).strip() if item.win_market_20days else None,
                 "win_market_30days": str(item.win_market_30days).strip() if item.win_market_30days else None,
                 
+                # 资金流向
+                "net_inflow": item.net_inflow,
+                "netinflow_3days": item.netinflow_3days,
+                "netinflow_5days": item.netinflow_5days,
+                "nowinterst_ratio": item.nowinterst_ratio,
+                "nowinterst_ratio_3d": item.nowinterst_ratio_3d,
+                "nowinterst_ratio_5d": item.nowinterst_ratio_5d,
+                "ddx": item.ddx,
+                "ddx_3d": item.ddx_3d,
+                "ddx_5d": item.ddx_5d,
+                "ddx_red_10d": item.ddx_red_10d,
+                
+                # 阶段涨跌幅
+                "changerate_3days": item.changerate_3days,
+                "changerate_5days": item.changerate_5days,
+                "changerate_10days": item.changerate_10days,
+                "changerate_ty": item.changerate_ty,
+                "upnday": item.upnday,
+                "downnday": item.downnday,
+                
+                # 上市数据
+                "listing_yield_year": item.listing_yield_year,
+                "listing_volatility_year": item.listing_volatility_year,
+                
+                # 沪深股通
+                "mutual_netbuy_amt": item.mutual_netbuy_amt,
+                "hold_ratio": item.hold_ratio,
+                
+                # 质押相关
+                "pledge_ratio": item.pledge_ratio,
+                "goodwill_scale": item.goodwill_scale,
+                "goodwill_assets_ratro": item.goodwill_assets_ratro,
+                
+                # 分红相关
+                "par_dividend_pretax": item.par_dividend_pretax,
+                "par_it_equity": item.par_it_equity,
+                
+                # 股东/高管变动
+                "holder_change_3m": item.holder_change_3m,
+                "executive_change_3m": item.executive_change_3m,
+                "org_survey_3m": item.org_survey_3m,
+                "org_rating": str(item.org_rating).strip() if item.org_rating else None,
+                
+                # 机构持股
+                "allcorp_num": item.allcorp_num,
+                "allcorp_fund_num": item.allcorp_fund_num,
+                "allcorp_qs_num": item.allcorp_qs_num,
+                "allcorp_qfii_num": item.allcorp_qfii_num,
+                "allcorp_bx_num": item.allcorp_bx_num,
+                "allcorp_sb_num": item.allcorp_sb_num,
+                "allcorp_xt_num": item.allcorp_xt_num,
+                "allcorp_ratio": item.allcorp_ratio,
+                "allcorp_fund_ratio": item.allcorp_fund_ratio,
+                "allcorp_qs_ratio": item.allcorp_qs_ratio,
+                "allcorp_qfii_ratio": item.allcorp_qfii_ratio,
+                "allcorp_bx_ratio": item.allcorp_bx_ratio,
+                "allcorp_sb_ratio": item.allcorp_sb_ratio,
+                "allcorp_xt_ratio": item.allcorp_xt_ratio,
+                
+                # 人气数据
+                "popularity_rank": item.popularity_rank,
+                "rank_change": item.rank_change,
+                "upp_days": item.upp_days,
+                "down_days": item.down_days,
+                "new_high": item.new_high,
+                "new_down": item.new_down,
+                "newfans_ratio": item.newfans_ratio,
+                "bigfans_ratio": item.bigfans_ratio,
+                "concern_rank_7days": item.concern_rank_7days,
+                "browse_rank": item.browse_rank,
+                
                 # 均线数据
                 "ma5": item.ma5,
                 "ma10": item.ma10,

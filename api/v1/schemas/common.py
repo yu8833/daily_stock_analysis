@@ -72,3 +72,24 @@ class SuccessResponse(BaseModel):
             "data": None
         }
     })
+
+
+class PaginationMeta(BaseModel):
+    """分页元信息"""
+    
+    current_page: int = Field(..., description="当前页码", ge=1)
+    page_size: int = Field(..., description="每页大小", ge=1)
+    total_pages: int = Field(..., description="总页数", ge=0)
+    total_count: int = Field(..., description="总记录数", ge=0)
+
+
+class PaginatedResponse(BaseModel):
+    """通用分页响应"""
+    
+    count: int = Field(..., description="总记录数")
+    total_pages: int = Field(..., description="总页数")
+    current_page: int = Field(..., description="当前页码")
+    page_size: int = Field(..., description="每页大小")
+    data: list[Any] = Field(default_factory=list, description="数据列表")
+    message: Optional[str] = Field(None, description="附加消息")
+    is_trading_day: Optional[bool] = Field(None, description="是否为交易日")

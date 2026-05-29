@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const formatDateTime = (value?: string | null): string => {
   if (!value) return '—';
   const date = new Date(value);
@@ -31,22 +33,12 @@ export const toDateInputValue = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-/**
- * Returns the date N days ago as YYYY-MM-DD in Asia/Shanghai timezone.
- * Consistent with getTodayInShanghai() so both ends of the date range
- * are expressed in the same timezone as the backend.
- */
 export const getRecentStartDate = (days: number): string => {
   const date = new Date();
   date.setDate(date.getDate() - days);
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(date);
 };
 
-/**
- * Returns today's date as YYYY-MM-DD in Asia/Shanghai timezone.
- * Use this instead of browser-local date to stay consistent with the backend,
- * which stores and filters timestamps in server local time (Asia/Shanghai).
- */
 export const getTodayInShanghai = (): string =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(new Date());
 
@@ -55,4 +47,103 @@ export const formatReportType = (value?: string): string => {
   if (value === 'simple') return '普通';
   if (value === 'detailed') return '标准';
   return value;
+};
+
+export const formatPct = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  const formatted = value >= 0 ? `+${value.toFixed(2)}%` : `${value.toFixed(2)}%`;
+  return formatted;
+};
+
+export const formatNumber = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  if (Math.abs(value) >= 100000000) {
+    return `${(value / 100000000).toFixed(2)}亿`;
+  }
+  if (Math.abs(value) >= 10000) {
+    return `${(value / 10000).toFixed(2)}万`;
+  }
+  return value.toFixed(0);
+};
+
+export const formatMoney = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  if (Math.abs(value) >= 100000000) {
+    return `${(value / 100000000).toFixed(2)}亿`;
+  }
+  if (Math.abs(value) >= 10000) {
+    return `${(value / 10000).toFixed(2)}万`;
+  }
+  return value.toFixed(2);
+};
+
+export const formatPrice = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  return value.toFixed(2);
+};
+
+export const formatVolume = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  if (Math.abs(value) >= 100000000) {
+    return `${(value / 100000000).toFixed(2)}亿`;
+  }
+  if (Math.abs(value) >= 10000) {
+    return `${(value / 10000).toFixed(2)}万`;
+  }
+  return value.toLocaleString();
+};
+
+export const getValueColor = (value: number | null | undefined, type: string): string => {
+  if (type === 'percent' && value !== null && value !== undefined) {
+    if (value > 0) return 'text-red-600 dark:text-red-400';
+    if (value < 0) return 'text-green-600 dark:text-green-400';
+  }
+  if (type === 'money' && value !== null && value !== undefined) {
+    if (value > 0) return 'text-red-600 dark:text-red-400';
+    if (value < 0) return 'text-green-600 dark:text-green-400';
+  }
+  return '';
+};
+
+export const getEastMoneyUrl = (code: string): string => {
+  if (code.startsWith('6') || code.startsWith('5') || code.startsWith('9')) {
+    return `https://quote.eastmoney.com/sh${code}.html`;
+  } else {
+    return `https://quote.eastmoney.com/sz${code}.html`;
+  }
+};
+
+export const getTodayIso = (): string => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
+export type ValueType = 'text' | 'number' | 'percent' | 'money' | 'price' | 'date' | 'flag';
+
+export interface ColumnConfig<T> {
+  key: keyof T;
+  label: string;
+  width: string;
+  align: 'left' | 'right' | 'center';
+  type: ValueType;
+  render?: (value: any, row: T) => React.ReactNode;
+}
+
+export const formatCellValue = <T,>(value: any, column: ColumnConfig<T>): string => {
+  if (value === null || value === undefined) return '-';
+
+  switch (column.type) {
+    case 'price':
+      return formatPrice(value);
+    case 'percent':
+      return formatPct(value);
+    case 'money':
+      return formatMoney(value);
+    case 'number':
+      return formatNumber(value);
+    case 'date':
+      return formatDate(value);
+    default:
+      return String(value);
+  }
 };

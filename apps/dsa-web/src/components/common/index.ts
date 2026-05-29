@@ -24,6 +24,8 @@ export * from './Badge';
 export * from './StatusDot';
 export * from './Tooltip';
 export * from './Pagination';
+export * from './TablePagination';
+export * from './DataTable';
 export * from './ConfirmDialog';
 export * from '../layout/Shell';
 export * from '../layout/SidebarNav';

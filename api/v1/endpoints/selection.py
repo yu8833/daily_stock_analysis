@@ -551,9 +551,44 @@ def get_selection_data(
                 "limited_lift_6m": item.limited_lift_6m,
                 "limited_lift_1y": item.limited_lift_1y,
                 
-                # 阶段涨跌幅
-                "directional_seo_1m": item.directional_seo_1m,
-                "directional_seo_3m": item.directional_seo_3m,
+                # 定增相关
+                "directional_seo_1m": str(item.directional_seo_1m).strip() if item.directional_seo_1m else None,
+                "directional_seo_3m": str(item.directional_seo_3m).strip() if item.directional_seo_3m else None,
+                "directional_seo_6m": str(item.directional_seo_6m).strip() if item.directional_seo_6m else None,
+                "directional_seo_1y": str(item.directional_seo_1y).strip() if item.directional_seo_1y else None,
+                
+                # 重组相关
+                "recapitalize_1m": str(item.recapitalize_1m).strip() if item.recapitalize_1m else None,
+                "recapitalize_3m": str(item.recapitalize_3m).strip() if item.recapitalize_3m else None,
+                "recapitalize_6m": str(item.recapitalize_6m).strip() if item.recapitalize_6m else None,
+                "recapitalize_1y": str(item.recapitalize_1y).strip() if item.recapitalize_1y else None,
+                
+                # 质押相关
+                "equity_pledge_1m": str(item.equity_pledge_1m).strip() if item.equity_pledge_1m else None,
+                "equity_pledge_3m": str(item.equity_pledge_3m).strip() if item.equity_pledge_3m else None,
+                "equity_pledge_6m": str(item.equity_pledge_6m).strip() if item.equity_pledge_6m else None,
+                "equity_pledge_1y": str(item.equity_pledge_1y).strip() if item.equity_pledge_1y else None,
+                
+                # 历史新高
+                "high_recent_3days": str(item.high_recent_3days).strip() if item.high_recent_3days else None,
+                "high_recent_5days": str(item.high_recent_5days).strip() if item.high_recent_5days else None,
+                "high_recent_10days": str(item.high_recent_10days).strip() if item.high_recent_10days else None,
+                "high_recent_20days": str(item.high_recent_20days).strip() if item.high_recent_20days else None,
+                "high_recent_30days": str(item.high_recent_30days).strip() if item.high_recent_30days else None,
+                
+                # 历史新低
+                "low_recent_3days": str(item.low_recent_3days).strip() if item.low_recent_3days else None,
+                "low_recent_5days": str(item.low_recent_5days).strip() if item.low_recent_5days else None,
+                "low_recent_10days": str(item.low_recent_10days).strip() if item.low_recent_10days else None,
+                "low_recent_20days": str(item.low_recent_20days).strip() if item.low_recent_20days else None,
+                "low_recent_30days": str(item.low_recent_30days).strip() if item.low_recent_30days else None,
+                
+                # 跑赢大盘
+                "win_market_3days": str(item.win_market_3days).strip() if item.win_market_3days else None,
+                "win_market_5days": str(item.win_market_5days).strip() if item.win_market_5days else None,
+                "win_market_10days": str(item.win_market_10days).strip() if item.win_market_10days else None,
+                "win_market_20days": str(item.win_market_20days).strip() if item.win_market_20days else None,
+                "win_market_30days": str(item.win_market_30days).strip() if item.win_market_30days else None,
                 
                 # 均线数据
                 "ma5": item.ma5,

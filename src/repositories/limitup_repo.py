@@ -128,23 +128,38 @@ class LimitUpRepository:
     def save_from_fetcher(self, query_date: date) -> int:
         """
         从数据源获取数据并保存到数据库
-        
+
         Args:
             query_date: 查询日期
-            
+
         Returns:
             保存的记录数
         """
         # 从同花顺获取数据
         data_list = self.fetcher.get_limit_up_reason(query_date.strftime('%Y-%m-%d'))
-        
+
         if not data_list:
             logger.info(f"未获取到 {query_date} 的涨停数据")
             return 0
-        
+
+        # 检查返回数据的日期是否与查询日期匹配
+        # 同花顺API在当天数据未发布时可能返回昨日数据，需要过滤
+        data_date_str = data_list[0].get('日期', '')
+        if data_date_str:
+            try:
+                data_date = datetime.strptime(str(data_date_str), '%Y-%m-%d').date()
+                if data_date != query_date:
+                    logger.info(
+                        f"数据日期不匹配: 请求 {query_date}, 返回 {data_date}。"
+                        f"当日数据可能尚未发布，返回空数据"
+                    )
+                    return 0
+            except ValueError:
+                logger.warning(f"无法解析数据日期: {data_date_str}，跳过日期校验")
+
         # 删除该日期的旧数据
         self._delete_date_data(query_date)
-        
+
         # 插入新数据
         saved_count = 0
         with self.db.get_session() as session:
@@ -168,10 +183,10 @@ class LimitUpRepository:
                     saved_count += 1
                 except Exception as e:
                     logger.warning(f"保存涨停数据失败 (code={item.get('代码')}): {e}")
-            
+
             session.commit()
             logger.info(f"保存涨停数据成功: {query_date}, 新增 {saved_count} 条")
-        
+
         return saved_count
     
     def _delete_date_data(self, query_date: date) -> None:

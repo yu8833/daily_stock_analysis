@@ -365,6 +365,23 @@ class EastmoneySelectionFetcher(BaseFetcher):
                     lambda x: ', '.join(x) if isinstance(x, list) else str(x)
                 )
             
+            # 处理 flag 类型字段（将 None 转换为 '0'）
+            flag_fields = [
+                'IS_ISSUE_BREAK', 'IS_BPS_BREAK', 'NOW_NEWHIGH', 'NOW_NEWLOW',
+                'HIGH_RECENT_3DAYS', 'HIGH_RECENT_5DAYS', 'HIGH_RECENT_10DAYS',
+                'HIGH_RECENT_20DAYS', 'HIGH_RECENT_30DAYS', 'LOW_RECENT_3DAYS',
+                'LOW_RECENT_5DAYS', 'LOW_RECENT_10DAYS', 'LOW_RECENT_20DAYS',
+                'LOW_RECENT_30DAYS', 'WIN_MARKET_3DAYS', 'WIN_MARKET_5DAYS',
+                'WIN_MARKET_10DAYS', 'WIN_MARKET_20DAYS', 'WIN_MARKET_30DAYS',
+                'DIRECTIONAL_SEO_1M', 'DIRECTIONAL_SEO_3M', 'DIRECTIONAL_SEO_6M',
+                'DIRECTIONAL_SEO_1Y', 'RECAPITALIZE_1M', 'RECAPITALIZE_3M',
+                'RECAPITALIZE_6M', 'RECAPITALIZE_1Y', 'EQUITY_PLEDGE_1M',
+                'EQUITY_PLEDGE_3M', 'EQUITY_PLEDGE_6M', 'EQUITY_PLEDGE_1Y',
+            ]
+            for field in flag_fields:
+                if field in temp_df.columns:
+                    temp_df[field] = temp_df[field].fillna('0').astype(str)
+            
             # 用 PE9 作为 PE 的值，因为东方财富 API 不直接返回 PE 字段
             if 'PE9' in temp_df.columns:
                 temp_df['PE'] = temp_df['PE9'].copy()

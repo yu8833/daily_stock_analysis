@@ -11,6 +11,7 @@
 import logging
 from datetime import datetime
 from datetime import date as date_class
+from datetime import time as time_class
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -19,6 +20,9 @@ from api.v1.schemas.common import ErrorResponse
 from src.repositories.limitup_repo import LimitUpRepository
 
 logger = logging.getLogger(__name__)
+
+MARKET_OPEN_TIME = time_class(9, 30)
+MARKET_CLOSE_TIME = time_class(15, 0)
 
 
 def is_trading_day(check_date: date_class) -> bool:
@@ -48,6 +52,21 @@ def is_trading_day(check_date: date_class) -> bool:
     ]
 
     return (month, day) not in holidays_2026
+
+
+def is_market_open_time(check_datetime: datetime) -> bool:
+    """
+    检查当前时间是否处于开盘时间内
+
+    Args:
+        check_datetime: 要检查的时间
+
+    Returns:
+        是否在开盘时间内（9:30-15:00）
+    """
+    current_time = check_datetime.time()
+    return MARKET_OPEN_TIME <= current_time <= MARKET_CLOSE_TIME
+
 
 router = APIRouter()
 
@@ -115,6 +134,21 @@ def get_limit_up_data(
                 "is_trading_day": False,
                 "message": f"{query_date.strftime('%Y-%m-%d')} 是非交易日（周末或节假日），暂无涨停数据"
             }
+
+        # 检查当天查询时是否在开盘时间前（9:30之前）
+        if query_date == date_class.today():
+            now = datetime.now()
+            if not is_market_open_time(now):
+                return {
+                    "date": query_date.strftime('%Y-%m-%d'),
+                    "count": 0,
+                    "total_pages": 0,
+                    "current_page": 1,
+                    "page_size": page_size,
+                    "data": [],
+                    "is_trading_day": True,
+                    "message": f"当前时间 {now.strftime('%H:%M')} 未到开盘时间 9:30，暂无今日涨停数据"
+                }
 
         # 获取数据（优先从数据库，不存在则从数据源获取）
         # 如果没有关键字搜索（页面刷新），检查缺失字段；有关键字搜索时不检查

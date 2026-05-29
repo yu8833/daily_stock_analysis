@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, Badge, EmptyState, Loading, Checkbox } from '../components/common';
 import { Search, ExternalLink, ArrowUp, ArrowDown, Download } from 'lucide-react';
 
@@ -108,11 +109,21 @@ const getTodayIso = (): string => {
 };
 
 const BuyPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   useEffect(() => {
     document.title = '买入信号 - STOCK';
   }, []);
 
-  const [selectedDate, setSelectedDate] = useState(getTodayIso());
+  const urlDate = searchParams.get('date');
+  const [selectedDate, setSelectedDate] = useState(urlDate || getTodayIso());
+
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    if (urlDate && urlDate !== selectedDate) {
+      setSelectedDate(urlDate);
+    }
+  }, [searchParams]);
   const [stockList, setStockList] = useState<BuyStock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -299,7 +310,10 @@ const BuyPage: React.FC = () => {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  setSearchParams({ date: e.target.value });
+                }}
                 className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none"
                 max={getTodayIso()}
               />
@@ -326,7 +340,7 @@ const BuyPage: React.FC = () => {
                 className="btn-secondary h-10 px-3 flex items-center gap-2"
               >
                 <Download size={14} />
-                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出全部'}
+                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出'}
               </button>
             </div>
             <Badge variant="success">{totalCount} 只股票</Badge>

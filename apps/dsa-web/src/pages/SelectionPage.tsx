@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, Badge, EmptyState, Loading, Checkbox } from '../components/common';
-import { Search, ExternalLink, Filter, ChevronDown, ArrowUp, ArrowDown, X, Check, Download } from 'lucide-react';
+import { Search, ExternalLink, ArrowUp, ArrowDown, Download } from 'lucide-react';
 
 interface SelectionStock {
   code: string;
@@ -25,19 +26,15 @@ interface SelectionStock {
   is_zz500: string | null;
   is_zz1000: string | null;
   is_cy50: string | null;
-  pe: number | null;
   pe9: number | null;
   pbnewmrq: number | null;
   pettmdeducted: number | null;
   ps9: number | null;
   pcfjyxjl9: number | null;
-  predict_pe_syear: number | null;
-  predict_pe_nyear: number | null;
-  dtsyl: number | null;
-  ycpeg: number | null;
-  enterprise_value_multiple: number | null;
   total_market_cap: number | null;
   free_cap: number | null;
+  dtsyl: number | null;
+  enterprise_value_multiple: number | null;
   basic_eps: number | null;
   bvps: number | null;
   per_netcash_operate: number | null;
@@ -137,9 +134,7 @@ interface SelectionStock {
   pledge_ratio: number | null;
   goodwill_scale: number | null;
   goodwill_assets_ratro: number | null;
-  predict_type: string | null;
   par_dividend_pretax: number | null;
-  par_dividend: number | null;
   par_it_equity: number | null;
   holder_change_3m: number | null;
   executive_change_3m: number | null;
@@ -169,10 +164,6 @@ interface SelectionStock {
   bigfans_ratio: number | null;
   concern_rank_7days: number | null;
   browse_rank: number | null;
-  is_issue_break: string | null;
-  is_bps_break: string | null;
-  now_newhigh: string | null;
-  now_newlow: string | null;
   high_recent_3days: string | null;
   high_recent_5days: string | null;
   high_recent_10days: string | null;
@@ -206,7 +197,6 @@ interface SelectionStock {
   downnday: number | null;
   listing_yield_year: number | null;
   listing_volatility_year: number | null;
-  mutual_netbuy_amt: number | null;
   hold_ratio: number | null;
 }
 
@@ -216,8 +206,6 @@ type SortOrder = 'asc' | 'desc';
 const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'left' | 'right' | 'center'; type: 'text' | 'number' | 'percent' | 'money' | 'price' | 'date' | 'flag' }[] = [
   { key: 'code', label: '代码', width: 'w-16', align: 'left', type: 'text' },
   { key: 'name', label: '名称', width: 'w-20', align: 'left', type: 'text' },
-  { key: 'is_issue_break', label: '破发', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'is_bps_break', label: '破净', width: 'w-14', align: 'center', type: 'flag' },
   { key: 'is_hs300', label: '沪深300', width: 'w-16', align: 'center', type: 'flag' },
   { key: 'is_sz50', label: '上证50', width: 'w-14', align: 'center', type: 'flag' },
   { key: 'is_zz500', label: '中证500', width: 'w-18', align: 'center', type: 'flag' },
@@ -277,8 +265,6 @@ const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'lef
   { key: 'equity_pledge_3m', label: '质押近3月', width: 'w-18', align: 'center', type: 'flag' },
   { key: 'equity_pledge_6m', label: '质押近6月', width: 'w-18', align: 'center', type: 'flag' },
   { key: 'equity_pledge_1y', label: '质押近1年', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'now_newhigh', label: '今日创历史新高', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'now_newlow', label: '今日创历史新低', width: 'w-24', align: 'center', type: 'flag' },
   { key: 'high_recent_3days', label: '近期创历史新高近3日', width: 'w-32', align: 'center', type: 'flag' },
   { key: 'high_recent_5days', label: '近期创历史新高近5日', width: 'w-32', align: 'center', type: 'flag' },
   { key: 'high_recent_10days', label: '近期创历史新高近10日', width: 'w-32', align: 'center', type: 'flag' },
@@ -307,16 +293,12 @@ const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'lef
   { key: 'deal_amount', label: '成交额', width: 'w-24', align: 'right', type: 'money' },
   { key: 'turnoverrate', label: '换手率', width: 'w-20', align: 'right', type: 'percent' },
   { key: 'amplitude', label: '振幅', width: 'w-16', align: 'right', type: 'percent' },
-  { key: 'pe', label: 'PE', width: 'w-14', align: 'right', type: 'number' },
   { key: 'pe9', label: 'PE(TTM)', width: 'w-16', align: 'right', type: 'number' },
   { key: 'pbnewmrq', label: 'PB(MRQ)', width: 'w-18', align: 'right', type: 'number' },
   { key: 'pettmdeducted', label: 'PE扣非', width: 'w-18', align: 'right', type: 'number' },
   { key: 'ps9', label: 'PS(TTM)', width: 'w-18', align: 'right', type: 'number' },
   { key: 'pcfjyxjl9', label: 'PCF(TTM)', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'predict_pe_syear', label: '预测PE今年', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'predict_pe_nyear', label: '预测PE明年', width: 'w-24', align: 'right', type: 'number' },
   { key: 'dtsyl', label: '动态PE', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'ycpeg', label: 'PEG', width: 'w-14', align: 'right', type: 'number' },
   { key: 'enterprise_value_multiple', label: '企业价值倍数', width: 'w-24', align: 'right', type: 'number' },
   { key: 'total_market_cap', label: '总市值', width: 'w-24', align: 'right', type: 'money' },
   { key: 'free_cap', label: '流通市值', width: 'w-24', align: 'right', type: 'money' },
@@ -365,9 +347,7 @@ const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'lef
   { key: 'pledge_ratio', label: '质押比例', width: 'w-18', align: 'right', type: 'percent' },
   { key: 'goodwill_scale', label: '商誉规模', width: 'w-20', align: 'right', type: 'money' },
   { key: 'goodwill_assets_ratro', label: '商誉占比', width: 'w-18', align: 'right', type: 'percent' },
-  { key: 'predict_type', label: '业绩预告', width: 'w-18', align: 'left', type: 'text' },
   { key: 'par_dividend_pretax', label: '每股股利税前', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'par_dividend', label: '每股红股', width: 'w-18', align: 'right', type: 'number' },
   { key: 'par_it_equity', label: '每股转增股本', width: 'w-24', align: 'right', type: 'number' },
   { key: 'holder_change_3m', label: '近3月股东增减', width: 'w-24', align: 'right', type: 'percent' },
   { key: 'executive_change_3m', label: '近3月高管增减', width: 'w-24', align: 'right', type: 'percent' },
@@ -415,7 +395,6 @@ const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'lef
   { key: 'downnday', label: '连跌天数', width: 'w-18', align: 'right', type: 'number' },
   { key: 'listing_yield_year', label: '上市以来年化收益率', width: 'w-32', align: 'right', type: 'percent' },
   { key: 'listing_volatility_year', label: '上市以来年化波动率', width: 'w-32', align: 'right', type: 'percent' },
-  { key: 'mutual_netbuy_amt', label: '沪深股通净买入', width: 'w-28', align: 'right', type: 'money' },
   { key: 'hold_ratio', label: '沪深股通持股比例', width: 'w-28', align: 'right', type: 'percent' },
 ];
 
@@ -466,11 +445,21 @@ const getTodayIso = (): string => {
 };
 
 const SelectionPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   useEffect(() => {
     document.title = '综合选股 - STOCK';
   }, []);
 
-  const [selectedDate, setSelectedDate] = useState(getTodayIso());
+  const urlDate = searchParams.get('date');
+  const [selectedDate, setSelectedDate] = useState(urlDate || getTodayIso());
+
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    if (urlDate && urlDate !== selectedDate) {
+      setSelectedDate(urlDate);
+    }
+  }, [searchParams]);
   const [stockList, setStockList] = useState<SelectionStock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -482,26 +471,20 @@ const SelectionPage: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('change_rate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  // 搜索状态
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
-
-  const [columnFilters, setColumnFilters] = useState<Record<string, Set<string>>>({});
-  const [openColumnMenu, setOpenColumnMenu] = useState<string | null>(null);
-  const columnMenuRef = useRef<HTMLDivElement>(null);
-  const [filteredStockList, setFilteredStockList] = useState<SelectionStock[]>([]);
+  
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    setFilteredStockList(stockList);
-    if (currentPage > totalPages) {
-      setCurrentPage(1);
-    }
-  }, [stockList, pageSize, totalPages]);
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(searchKeyword);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
 
   const fetchSelectionData = async () => {
     setIsLoading(true);
-
     try {
       const params = new URLSearchParams({
         date: selectedDate,
@@ -511,25 +494,15 @@ const SelectionPage: React.FC = () => {
         sort_order: sortOrder,
       });
       
-      Object.entries(columnFilters).forEach(([columnKey, values]) => {
-        if (values && values.size > 0) {
-          values.forEach(value => {
-            params.append(`filters[${columnKey}]`, value);
-          });
-        }
-      });
-      
       if (debouncedKeyword.trim()) {
         params.append('keyword', debouncedKeyword.trim());
       }
       
       const url = `/api/v1/select/?${params.toString()}`;
-
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const result = await response.json();
       setStockList(result.data || []);
       setTotalCount(result.count || 0);
@@ -542,22 +515,9 @@ const SelectionPage: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log('debounce effect triggered, searchKeyword:', searchKeyword);
-    const timer = setTimeout(() => {
-      console.log('debounce timeout triggered, setting debouncedKeyword:', searchKeyword);
-      setDebouncedKeyword(searchKeyword);
-    }, 500);
-
-    return () => {
-      console.log('debounce cleared for:', searchKeyword);
-      clearTimeout(timer);
-    };
-  }, [searchKeyword]);
-
-  useEffect(() => {
     setCurrentPage(1);
     void fetchSelectionData();
-  }, [selectedDate, pageSize, debouncedKeyword, columnFilters]);
+  }, [selectedDate, pageSize, debouncedKeyword]);
 
   useEffect(() => {
     void fetchSelectionData();
@@ -574,80 +534,20 @@ const SelectionPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const toggleColumnFilter = (columnKey: string, value: string) => {
-    setColumnFilters(prev => {
-      const current = prev[columnKey] || new Set<string>();
-      const newSet = new Set(current);
-      if (newSet.has(value)) {
-        newSet.delete(value);
-      } else {
-        newSet.add(value);
-      }
-      if (newSet.size === 0) {
-        const { [columnKey]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [columnKey]: newSet };
-    });
-    setCurrentPage(1);
-  };
-
-  const selectAllForColumn = (columnKey: string, allValues: string[]) => {
-    setColumnFilters(prev => {
-      const newSet = new Set(allValues);
-      return { ...prev, [columnKey]: newSet };
-    });
-    setCurrentPage(1);
-  };
-
-  const clearColumnFilter = (columnKey: string) => {
-    setColumnFilters(prev => {
-      const { [columnKey]: _, ...rest } = prev;
-      return rest;
-    });
-    setCurrentPage(1);
-  };
-
-  const handleColumnSort = (field: SortField, direction: 'asc' | 'desc') => {
-    setSortField(field);
-    setSortOrder(direction);
-    setCurrentPage(1);
-    setOpenColumnMenu(null);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (columnMenuRef.current && !columnMenuRef.current.contains(event.target as Node)) {
-        setOpenColumnMenu(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const getColumnUniqueValues = (columnKey: string): string[] => {
-    const values = new Set<string>();
-    stockList.forEach(stock => {
-      const value = (stock as any)[columnKey];
-      if (value !== null && value !== undefined) {
-        values.add(String(value));
-      }
-    });
-    return Array.from(values).sort();
-  };
-
-  const hasActiveFilter = (columnKey: string) => {
-    const filter = columnFilters[columnKey];
-    if (!filter || filter.size === 0) return false;
-    const allValues = getColumnUniqueValues(columnKey);
-    return filter.size < allValues.length;
+  const handleColumnSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('desc');
+    }
   };
 
   const handleSelectAll = () => {
-    if (selectedCodes.size === filteredStockList.length) {
+    if (selectedCodes.size === stockList.length) {
       setSelectedCodes(new Set());
     } else {
-      setSelectedCodes(new Set(filteredStockList.map(s => s.code)));
+      setSelectedCodes(new Set(stockList.map(s => s.code)));
     }
   };
 
@@ -659,6 +559,35 @@ const SelectionPage: React.FC = () => {
       newSelected.add(code);
     }
     setSelectedCodes(newSelected);
+  };
+
+  const handleExport = () => {
+    const exportList = selectedCodes.size > 0
+      ? stockList.filter(s => selectedCodes.has(s.code))
+      : stockList;
+
+    const headers = COLUMN_CONFIG.map(col => col.label).join(',');
+    const rows = exportList.map(stock => {
+      return COLUMN_CONFIG.map(col => {
+        const value = (stock as any)[col.key];
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'string' && value.includes(',')) {
+          return `"${value}"`;
+        }
+        return String(value);
+      }).join(',');
+    });
+    
+    const csvContent = [headers, ...rows].join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `selection_${selectedDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const renderCellValue = (stock: SelectionStock, column: typeof COLUMN_CONFIG[0]) => {
@@ -695,35 +624,6 @@ const SelectionPage: React.FC = () => {
     return '';
   };
 
-  const handleExport = () => {
-    const exportList = selectedCodes.size > 0
-      ? filteredStockList.filter(s => selectedCodes.has(s.code))
-      : filteredStockList;
-
-    const headers = COLUMN_CONFIG.map(col => col.label).join(',');
-    const rows = exportList.map(stock => {
-      return COLUMN_CONFIG.map(col => {
-        const value = (stock as any)[col.key];
-        if (value === null || value === undefined) return '';
-        if (typeof value === 'string' && value.includes(',')) {
-          return `"${value}"`;
-        }
-        return String(value);
-      }).join(',');
-    });
-    
-    const csvContent = [headers, ...rows].join('\n');
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `selection_${selectedDate}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="limitup-page min-h-screen space-y-4 p-4 md:p-6">
       <section className="space-y-3">
@@ -734,7 +634,7 @@ const SelectionPage: React.FC = () => {
           <div>
             <h1 className="text-xl md:text-2xl font-semibold text-foreground">综合选股</h1>
             <p className="text-xs md:text-sm text-secondary">
-              根据多种指标筛选股票，支持升序降序排列和列筛选
+              根据多种指标筛选股票，支持升序降序排列
             </p>
           </div>
         </div>
@@ -746,7 +646,10 @@ const SelectionPage: React.FC = () => {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  setSearchParams({ date: e.target.value });
+                }}
                 className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none"
                 max={getTodayIso()}
               />
@@ -794,7 +697,7 @@ const SelectionPage: React.FC = () => {
                   <tr>
                     <th className="w-12 px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       <Checkbox
-                        checked={filteredStockList.length > 0 && selectedCodes.size === filteredStockList.length}
+                        checked={stockList.length > 0 && selectedCodes.size === stockList.length}
                         onChange={handleSelectAll}
                       />
                     </th>
@@ -805,91 +708,26 @@ const SelectionPage: React.FC = () => {
                           column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
                         }`}
                       >
-                        <div className="relative" ref={openColumnMenu === column.key ? columnMenuRef : null}>
-                          <div className="flex items-center justify-center gap-1 cursor-pointer" onClick={() => setOpenColumnMenu(openColumnMenu === column.key ? null : column.key)}>
-                            <span>{column.label}</span>
-                            {sortField === column.key && (
-                              sortOrder === 'asc' ? (
-                                <ArrowUp size={14} className="text-blue-500" />
-                              ) : (
-                                <ArrowDown size={14} className="text-blue-500" />
-                              )
-                            )}
-                            {hasActiveFilter(column.key) && (
-                              <Filter size={12} className="text-orange-500" />
-                            )}
-                            <ChevronDown size={12} className={`transition-transform ${openColumnMenu === column.key ? 'rotate-180' : ''}`} />
-                          </div>
-                          {openColumnMenu === column.key && (
-                            <div className="absolute z-50 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg" style={{ minWidth: '180px' }}>
-                              <div className="py-1">
-                                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                                  排序
-                                </div>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleColumnSort(column.key as SortField, 'asc'); }}
-                                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                >
-                                  <ArrowUp size={14} />
-                                  升序排列
-                                  {sortField === column.key && sortOrder === 'asc' && <Check size={14} className="ml-auto text-blue-500" />}
-                                </button>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleColumnSort(column.key as SortField, 'desc'); }}
-                                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                >
-                                  <ArrowDown size={14} />
-                                  降序排列
-                                  {sortField === column.key && sortOrder === 'desc' && <Check size={14} className="ml-auto text-blue-500" />}
-                                </button>
-                              </div>
-                              {column.type === 'flag' && (
-                                <div className="py-1 border-t border-gray-200 dark:border-gray-700">
-                                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                                    <span>筛选</span>
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); selectAllForColumn(column.key, ['1', '是', '0', '否']); }}
-                                      className="text-xs text-blue-500 hover:text-blue-700"
-                                    >
-                                      全选
-                                    </button>
-                                  </div>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); clearColumnFilter(column.key); }}
-                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <X size={14} />
-                                    取消筛选
-                                  </button>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); toggleColumnFilter(column.key, '1'); }}
-                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <span className={`w-4 h-4 border rounded flex items-center justify-center ${(columnFilters[column.key] || new Set()).has('1') ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
-                                      {(columnFilters[column.key] || new Set()).has('1') && <Check size={12} className="text-white" />}
-                                    </span>
-                                    显示"是"
-                                  </button>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); toggleColumnFilter(column.key, '0'); }}
-                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <span className={`w-4 h-4 border rounded flex items-center justify-center ${(columnFilters[column.key] || new Set()).has('0') ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
-                                      {(columnFilters[column.key] || new Set()).has('0') && <Check size={12} className="text-white" />}
-                                    </span>
-                                    显示"否"
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                        <button
+                          type="button"
+                          onClick={() => handleColumnSort(column.key)}
+                          className="flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>{column.label}</span>
+                          {sortField === column.key && (
+                            sortOrder === 'asc' ? (
+                              <ArrowUp size={14} className="text-blue-500" />
+                            ) : (
+                              <ArrowDown size={14} className="text-blue-500" />
+                            )
                           )}
-                        </div>
+                        </button>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredStockList.length === 0 ? (
+                  {stockList.length === 0 ? (
                     <tr>
                       <td colSpan={COLUMN_CONFIG.length + 1} className="px-6 py-12 text-center">
                       <EmptyState
@@ -899,7 +737,7 @@ const SelectionPage: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                      filteredStockList.map(stock => (
+                      stockList.map(stock => (
                         <tr key={stock.code} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                           <td className="px-3 py-3">
                             <Checkbox
@@ -937,7 +775,7 @@ const SelectionPage: React.FC = () => {
         )}
       </Card>
 
-      {filteredStockList.length > 0 && (
+      {stockList.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-white/10">
               <div className="flex items-center gap-4">
                 <span className="text-sm text-secondary">
@@ -1008,7 +846,7 @@ const SelectionPage: React.FC = () => {
                   type="button"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="btn-secondary h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-secondary h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   下一页
                 </button>

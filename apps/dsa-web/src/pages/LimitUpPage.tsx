@@ -1,8 +1,7 @@
-import type React from 'react';
-import { useEffect, useState } from 'react';
-import { Card, Badge, EmptyState, Loading } from '../components/common';
-import { toDateInputValue } from '../utils/format';
-import { TrendingUp, ExternalLink } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Card, Badge, EmptyState, Loading, Checkbox } from '../components/common';
+import { TrendingUp, ExternalLink, ArrowUp, ArrowDown, Download } from 'lucide-react';
 
 interface LimitUpStock {
   code: string;
@@ -18,10 +17,6 @@ interface LimitUpStock {
   dde: number | null;
 }
 
-interface ExpandedDetail {
-  [key: string]: boolean;
-}
-
 interface LimitUpResponse {
   date: string;
   count: number;
@@ -33,91 +28,109 @@ interface LimitUpResponse {
   is_trading_day?: boolean;
 }
 
-function getTodayIso(): string {
-  return toDateInputValue(new Date());
-}
-
-function formatNumber(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return '--';
-  return Number(value).toLocaleString('zh-CN');
-}
-
-function formatMoney(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return '--';
-  return `${Number(value).toLocaleString('zh-CN')}`;
-}
-
-function formatPct(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return '--';
-  const sign = value > 0 ? '+' : '';
-  return `${sign}${value.toFixed(2)}%`;
-}
-
-type SortField = 'turnover_rate' | 'volume' | 'amount' | 'change_pct';
+type SortField = keyof LimitUpStock;
 type SortOrder = 'asc' | 'desc';
 
-function getEastMoneyUrl(code: string): string {
-  let market = '';
-  const codeStr = String(code).trim();
-  
-  if (codeStr.startsWith('60') || codeStr.startsWith('688')) {
-    market = 'sh';
-  } else if (codeStr.startsWith('00') || codeStr.startsWith('30')) {
-    market = 'sz';
-  } else if (codeStr.startsWith('hk')) {
-    market = 'hk';
-    return `https://quote.eastmoney.com/${codeStr}.html`;
-  } else if (codeStr.length === 6) {
-    market = 'sh';
-  }
-  
-  return `https://quote.eastmoney.com/${market}${codeStr}.html`;
+const COLUMN_CONFIG: { key: SortField; label: string; width: string; align: 'left' | 'right' | 'center'; type: 'text' | 'number' | 'percent' | 'money' | 'price' }[] = [
+  { key: 'code', label: '代码', width: 'w-16', align: 'left', type: 'text' },
+  { key: 'name', label: '名称', width: 'w-20', align: 'left', type: 'text' },
+  { key: 'reason', label: '涨停原因', width: 'w-32', align: 'left', type: 'text' },
+  { key: 'detail_reason', label: '详细原因', width: 'w-64', align: 'left', type: 'text' },
+  { key: 'price', label: '最新价', width: 'w-20', align: 'right', type: 'price' },
+  { key: 'change_pct', label: '涨跌幅', width: 'w-20', align: 'right', type: 'percent' },
+  { key: 'turnover_rate', label: '换手率', width: 'w-20', align: 'right', type: 'percent' },
+  { key: 'volume', label: '成交量', width: 'w-24', align: 'right', type: 'number' },
+  { key: 'amount', label: '成交额', width: 'w-24', align: 'right', type: 'money' },
+  { key: 'dde', label: 'DDE净额', width: 'w-24', align: 'right', type: 'money' },
+];
+
+function getTodayIso(): string {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
 }
 
+const formatPct = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  const formatted = value >= 0 ? `+${value.toFixed(2)}%` : `${value.toFixed(2)}%`;
+  return formatted;
+};
+
+const formatNumber = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  if (Math.abs(value) >= 100000000) {
+    return `${(value / 100000000).toFixed(2)}亿`;
+  }
+  if (Math.abs(value) >= 10000) {
+    return `${(value / 10000).toFixed(2)}万`;
+  }
+  return value.toFixed(0);
+};
+
+const formatMoney = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  if (Math.abs(value) >= 100000000) {
+    return `${(value / 100000000).toFixed(2)}亿`;
+  }
+  if (Math.abs(value) >= 10000) {
+    return `${(value / 10000).toFixed(2)}万`;
+  }
+  return value.toFixed(2);
+};
+
+const formatPrice = (value: number | null | undefined): string => {
+  if (value == null) return '-';
+  return value.toFixed(2);
+};
+
+const getEastMoneyUrl = (code: string): string => {
+  if (code.startsWith('6') || code.startsWith('5') || code.startsWith('9')) {
+    return `https://quote.eastmoney.com/sh${code}.html`;
+  } else {
+    return `https://quote.eastmoney.com/sz${code}.html`;
+  }
+};
+
 const LimitUpPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   useEffect(() => {
     document.title = '涨停揭秘 - STOCK';
   }, []);
 
-  const [selectedDate, setSelectedDate] = useState(getTodayIso());
+  const urlDate = searchParams.get('date');
+  const [selectedDate, setSelectedDate] = useState(urlDate || getTodayIso());
+
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    if (urlDate && urlDate !== selectedDate) {
+      setSelectedDate(urlDate);
+    }
+  }, [searchParams]);
   const [stockList, setStockList] = useState<LimitUpStock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedDetails, setExpandedDetails] = useState<ExpandedDetail>({});
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   
-  // 分页状态
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   
-  // 排序状态
   const [sortField, setSortField] = useState<SortField>('change_pct');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  // 搜索状态
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
+  
+  const [expandedStock, setExpandedStock] = useState<string | null>(null);
+  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
 
-  // 提示信息状态
-  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
-
-  const toggleDetail = (code: string) => {
-    setExpandedDetails(prev => ({
-      ...prev,
-      [code]: !prev[code]
-    }));
-  };
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('desc');
-    }
-    setCurrentPage(1);
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(searchKeyword);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
 
   const fetchLimitUpData = async () => {
     setIsLoading(true);
@@ -131,9 +144,11 @@ const LimitUpPage: React.FC = () => {
         sort_field: sortField,
         sort_order: sortOrder,
       });
+      
       if (debouncedKeyword.trim()) {
         params.append('keyword', debouncedKeyword.trim());
       }
+      
       const url = `/api/v1/limitup/?${params.toString()}`;
       const response = await fetch(url);
 
@@ -146,7 +161,7 @@ const LimitUpPage: React.FC = () => {
       if (result.data && Array.isArray(result.data)) {
         setStockList(result.data);
         setTotalCount(result.count);
-        setTotalPages(result.total_pages);
+        setTotalPages(result.total_pages || 0);
         setNoticeMessage(result.message || null);
       } else {
         setStockList([]);
@@ -166,19 +181,13 @@ const LimitUpPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedKeyword(searchKeyword);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchKeyword]);
-
-  useEffect(() => {
     setCurrentPage(1);
+    setSelectedCodes(new Set());
     void fetchLimitUpData();
   }, [selectedDate, pageSize, debouncedKeyword]);
 
   useEffect(() => {
+    setSelectedCodes(new Set());
     void fetchLimitUpData();
   }, [currentPage, sortField, sortOrder]);
 
@@ -191,6 +200,92 @@ const LimitUpPage: React.FC = () => {
   const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPageSize(Number(e.target.value));
     setCurrentPage(1);
+  };
+
+  const handleColumnSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('desc');
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedCodes.size === stockList.length) {
+      setSelectedCodes(new Set());
+    } else {
+      setSelectedCodes(new Set(stockList.map(s => s.code)));
+    }
+  };
+
+  const handleSelectRow = (code: string) => {
+    const newSelected = new Set(selectedCodes);
+    if (newSelected.has(code)) {
+      newSelected.delete(code);
+    } else {
+      newSelected.add(code);
+    }
+    setSelectedCodes(newSelected);
+  };
+
+  const handleExport = () => {
+    const exportList = selectedCodes.size > 0 
+      ? stockList.filter(s => selectedCodes.has(s.code))
+      : stockList;
+    
+    const headers = COLUMN_CONFIG.map(col => col.label).join(',');
+    const rows = exportList.map(stock => {
+      return COLUMN_CONFIG.map(col => {
+        const value = (stock as any)[col.key];
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'string' && value.includes(',')) {
+          return `"${value}"`;
+        }
+        return String(value);
+      }).join(',');
+    });
+    
+    const csvContent = [headers, ...rows].join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `limitup_${selectedDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const renderCellValue = (stock: LimitUpStock, column: typeof COLUMN_CONFIG[0]) => {
+    const value = (stock as any)[column.key];
+    if (value === null || value === undefined) return '-';
+
+    switch (column.type) {
+      case 'price':
+        return formatPrice(value);
+      case 'percent':
+        return formatPct(value);
+      case 'money':
+        return formatMoney(value);
+      case 'number':
+        return formatNumber(value);
+      default:
+        return String(value);
+    }
+  };
+
+  const getValueColor = (value: number | null | undefined, type: string) => {
+    if (type === 'percent' && value !== null && value !== undefined) {
+      if (value > 0) return 'text-red-600 dark:text-red-400';
+      if (value < 0) return 'text-green-600 dark:text-green-400';
+    }
+    if (type === 'money' && value !== null && value !== undefined) {
+      if (value > 0) return 'text-red-600 dark:text-red-400';
+      if (value < 0) return 'text-green-600 dark:text-green-400';
+    }
+    return '';
   };
 
   return (
@@ -215,7 +310,10 @@ const LimitUpPage: React.FC = () => {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  setSearchParams({ date: e.target.value });
+                }}
                 className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none"
                 max={getTodayIso()}
               />
@@ -225,7 +323,7 @@ const LimitUpPage: React.FC = () => {
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 placeholder="代码/名称/原因..."
-                className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none w-40"
+                className="input-surface input-focus-glow h-10 rounded-lg border bg-transparent px-3 text-sm transition-all focus:outline-none w-48"
               />
               {searchKeyword && (
                 <button
@@ -236,10 +334,26 @@ const LimitUpPage: React.FC = () => {
                   清除
                 </button>
               )}
+              <button
+                type="button"
+                onClick={handleExport}
+                className="btn-secondary h-10 px-3 flex items-center gap-2"
+              >
+                <Download size={14} />
+                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出'}
+              </button>
             </div>
             <Badge variant="success">{totalCount} 只涨停</Badge>
           </div>
         </Card>
+
+        {noticeMessage && (
+          <Card padding="md">
+            <div className="flex items-center gap-2 text-secondary">
+              <span className="text-sm">{noticeMessage}</span>
+            </div>
+          </Card>
+        )}
       </section>
 
       {error ? (
@@ -247,205 +361,198 @@ const LimitUpPage: React.FC = () => {
           <div className="text-center py-8">
             <p className="text-danger">{error}</p>
             <button
-              type="button"
-              className="btn-secondary mt-3"
-              onClick={() => void fetchLimitUpData()}
+              onClick={() => {
+                setCurrentPage(1);
+                void fetchLimitUpData();
+              }}
+              className="btn-primary mt-4"
             >
-              重试
+              重新加载
             </button>
           </div>
         </Card>
       ) : (
-        <Card padding="md">
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loading label="获取涨停数据中..." />
-              </div>
-            ) : stockList.length === 0 ? (
-              <EmptyState
-                title="暂无涨停数据"
-                description={noticeMessage || `${selectedDate} 当日没有涨停股票数据，或数据源暂时不可用。`}
-                className="border-none bg-transparent px-4 py-8 shadow-none"
-              />
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="text-sm text-secondary border-b border-white/10">
-                  <tr>
-                    <th className="text-left py-3 px-2">代码</th>
-                    <th className="text-left py-3 px-2">名称</th>
-                    <th className="text-left py-3 px-2">涨停原因</th>
-                    <th className="text-left py-3 px-2">详因</th>
-                    <th className="text-right py-3 px-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('turnover_rate')}
-                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors w-full"
-                      >
-                        换手率
-                        {sortField === 'turnover_rate' && (
-                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </button>
-                    </th>
-                    <th className="text-right py-3 px-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('volume')}
-                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors w-full"
-                      >
-                        成交量
-                        {sortField === 'volume' && (
-                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </button>
-                    </th>
-                    <th className="text-right py-3 px-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('amount')}
-                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors w-full"
-                      >
-                        成交额(万)
-                        {sortField === 'amount' && (
-                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </button>
-                    </th>
-                    <th className="text-right py-3 px-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('change_pct')}
-                        className="flex items-center justify-end gap-1 hover:text-primary transition-colors w-full"
-                      >
-                        涨跌幅
-                        {sortField === 'change_pct' && (
-                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                        )}
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stockList.map((stock, index) => (
-                    <tr key={`${stock.code}-${index}`} className="border-b border-white/5 hover:bg-white/[0.02]">
-                      <td className="py-3 px-2">
-                        <a
-                          href={getEastMoneyUrl(stock.code)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-mono text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+        <Card>
+          {isLoading ? (
+            <div className="flex items-center justify-center min-h-[400px] py-12">
+              <Loading label="获取股票数据中..." />
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th className="w-12 px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <Checkbox
+                          checked={stockList.length > 0 && selectedCodes.size === stockList.length}
+                          onChange={handleSelectAll}
+                        />
+                      </th>
+                      {COLUMN_CONFIG.map(column => (
+                        <th
+                          key={column.key}
+                          className={`px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${column.width} ${
+                            column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
+                          }`}
                         >
-                          {stock.code}
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </td>
-                      <td className="py-3 px-2 font-medium">{stock.name}</td>
-                      <td className="py-3 px-2 text-secondary max-w-xs truncate" title={stock.reason}>
-                        {stock.reason || '-'}
-                      </td>
-                      <td className="py-3 px-2 text-secondary max-w-xs" onDoubleClick={() => toggleDetail(stock.code)} title="双击展开详情">
-                        <div className="relative cursor-pointer">
-                          {(stock.detail_reason?.length || 0) > 50 ? (
-                            <>
-                              <div className="truncate text-sm" title={stock.detail_reason}>
-                                {stock.detail_reason?.slice(0, 50)}...
-                              </div>
-                              {expandedDetails[stock.code] && (
-                                <div className="mt-2 p-2 bg-secondary/10 rounded text-sm whitespace-pre-wrap">
-                                  {stock.detail_reason}
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-sm" title={stock.detail_reason}>{stock.detail_reason || '-'}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-2 text-right text-secondary">
-                        {stock.turnover_rate != null ? `${stock.turnover_rate}%` : '-'}
-                      </td>
-                      <td className="py-3 px-2 text-right text-secondary">
-                        {formatNumber(stock.volume)}
-                      </td>
-                      <td className="py-3 px-2 text-right text-secondary">
-                        {formatMoney(stock.amount)}
-                      </td>
-                      <td className={`py-3 px-2 text-right font-medium ${stock.change_pct != null && stock.change_pct > 0 ? 'text-success' : 'text-secondary'}`}>
-                        {formatPct(stock.change_pct)}
-                      </td>
+                          <button
+                            type="button"
+                            onClick={() => handleColumnSort(column.key)}
+                            className="flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <span>{column.label}</span>
+                            {sortField === column.key && (
+                              sortOrder === 'asc' ? (
+                                <ArrowUp size={14} className="text-blue-500" />
+                              ) : (
+                                <ArrowDown size={14} className="text-blue-500" />
+                              )
+                            )}
+                          </button>
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-          
-          {/* 分页组件 */}
-          {stockList.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-white/10">
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-secondary">
-                  共 {totalCount} 条记录
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-secondary">每页显示:</span>
-                  <select
-                    value={pageSize}
-                    onChange={handlePageSizeChange}
-                    className="input-surface input-focus-glow h-8 rounded border bg-transparent px-2 text-sm"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <span className="text-sm text-secondary">条</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="btn-secondary h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  上一页
-                </button>
-                
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = currentPage <= 3 ? i + 1 : 
-                                 currentPage + i - 2 > totalPages ? totalPages - 4 + i : 
-                                 currentPage + i - 2;
-                  return (
-                    <button
-                      key={pageNum}
-                      type="button"
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`h-8 w-8 px-2 rounded ${
-                        currentPage === pageNum
-                          ? 'bg-primary text-white'
-                          : 'btn-secondary'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-                
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="btn-secondary h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  下一页
-                </button>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                    {stockList.length === 0 ? (
+                      <tr>
+                        <td colSpan={COLUMN_CONFIG.length + 1} className="px-6 py-12 text-center">
+                          <EmptyState
+                            title="暂无数据"
+                            description={noticeMessage || '没有找到符合条件的涨停股票数据'}
+                          />
+                        </td>
+                      </tr>
+                    ) : (
+                      stockList.map(stock => (
+                        <React.Fragment key={stock.code}>
+                          <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td className="px-3 py-3">
+                              <Checkbox
+                                checked={selectedCodes.has(stock.code)}
+                                onChange={() => handleSelectRow(stock.code)}
+                              />
+                            </td>
+                            {COLUMN_CONFIG.map(column => (
+                              <td
+                                key={column.key}
+                                className={`px-3 py-3 text-sm text-gray-900 dark:text-gray-100 ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'} ${getValueColor((stock as any)[column.key], column.type)} ${column.key !== 'detail_reason' ? 'whitespace-nowrap' : ''}`}
+                              >
+                                {column.key === 'code' || column.key === 'name' ? (
+                                  <a
+                                    href={getEastMoneyUrl(stock.code)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
+                                  >
+                                    {renderCellValue(stock, column)}
+                                    {column.key === 'code' && <ExternalLink size={12} />}
+                                  </a>
+                                ) : column.key === 'detail_reason' ? (
+                                  <span 
+                                    className={`cursor-pointer ${expandedStock === stock.code ? 'whitespace-pre-wrap' : 'line-clamp-1'}`}
+                                    title={stock.detail_reason}
+                                    onDoubleClick={() => setExpandedStock(expandedStock === stock.code ? null : stock.code)}
+                                  >
+                                    {stock.detail_reason}
+                                  </span>
+                                ) : (
+                                  <span className="truncate max-w-[200px]" title={column.key === 'reason' ? stock.reason : undefined}>
+                                    {renderCellValue(stock, column)}
+                                  </span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        </React.Fragment>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
         </Card>
+      )}
+
+      {stockList.length > 0 && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-white/10">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-secondary">
+              共 {totalCount} 条记录
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-secondary">每页显示:</span>
+              <select
+                value={pageSize}
+                onChange={handlePageSizeChange}
+                className="input-surface input-focus-glow h-8 rounded border bg-transparent px-2 text-sm"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm text-secondary">条</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="btn-secondary h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              上一页
+            </button>
+            
+            {(() => {
+              const visiblePages = 5;
+              let start = 1;
+              
+              if (totalPages > visiblePages) {
+                if (currentPage <= 3) {
+                  start = 1;
+                } else if (currentPage >= totalPages - 2) {
+                  start = totalPages - 4;
+                } else {
+                  start = currentPage - 2;
+                }
+              }
+              
+              const pageNumbers = [];
+              for (let i = 0; i < visiblePages && start + i <= totalPages; i++) {
+                pageNumbers.push(start + i);
+              }
+              
+              return pageNumbers.map((pageNum) => (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`h-8 w-8 px-2 rounded ${
+                    currentPage === pageNum
+                      ? 'bg-primary text-white'
+                      : 'btn-secondary'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ));
+            })()}
+            
+            <button
+              type="button"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="btn-secondary h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              下一页
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

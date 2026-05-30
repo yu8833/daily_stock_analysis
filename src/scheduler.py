@@ -61,6 +61,7 @@ class Scheduler:
     - 每日定时执行
     - 启动时立即执行
     - 优雅退出
+    - 选股数据定时刷新
     """
 
     def __init__(
@@ -88,6 +89,29 @@ class Scheduler:
         self._daily_job: Optional[Any] = None
         self._background_tasks: List[Dict[str, Any]] = []
         self._running = False
+
+    def _refresh_selection_data(self):
+        """刷新选股数据"""
+        try:
+            from src.repositories.selection_repo import SelectionRepository
+            from datetime import date
+
+            repo = SelectionRepository()
+            today = date.today()
+            results = repo.get_or_fetch(today, check_missing=True)
+            logger.info(f"自动刷新 {today} 选股数据，共 {len(results)} 条")
+        except Exception as e:
+            logger.error(f"自动刷新选股数据失败: {e}")
+
+    def set_selection_refresh_tasks(self):
+        """设置选股数据定时刷新任务"""
+        # 上午 11:30 刷新
+        self.schedule.every().day.at("11:30").do(self._refresh_selection_data)
+        logger.info("已设置选股数据每日 11:30 自动刷新")
+
+        # 下午 15:00 刷新
+        self.schedule.every().day.at("15:00").do(self._refresh_selection_data)
+        logger.info("已设置选股数据每日 15:00 自动刷新")
 
     def set_daily_task(self, task: Callable, run_immediately: bool = True):
         """
@@ -311,6 +335,7 @@ def run_with_schedule(
     run_immediately: bool = True,
     background_tasks: Optional[List[Dict[str, Any]]] = None,
     schedule_time_provider: Optional[Callable[[], str]] = None,
+    enable_selection_refresh: bool = True,
 ):
     """
     便捷函数：使用定时调度运行任务
@@ -324,6 +349,7 @@ def run_with_schedule(
             和 `run_immediately`。`interval_seconds` 单位为秒。
         schedule_time_provider: 可选的时间提供器；调度器每轮检查前会读取，
             当返回值变化时自动重建 daily job。
+        enable_selection_refresh: 是否启用选股数据自动刷新（默认启用）
     """
     scheduler = Scheduler(
         schedule_time=schedule_time,
@@ -336,6 +362,11 @@ def run_with_schedule(
             run_immediately=entry.get("run_immediately", False),
             name=entry.get("name"),
         )
+    
+    # 设置选股数据自动刷新任务
+    if enable_selection_refresh:
+        scheduler.set_selection_refresh_tasks()
+    
     scheduler.set_daily_task(task, run_immediately=run_immediately)
     scheduler.run()
 

@@ -436,25 +436,28 @@ class SelectionRepository:
             )
             session.commit()
     
-    def get_or_fetch(self, query_date: date) -> List[StockSelection]:
+    def get_or_fetch(self, query_date: date, check_missing: bool = False) -> List[StockSelection]:
         """
         获取指定日期的选股数据，如果数据库中没有则从数据源获取并保存
         
         Args:
             query_date: 查询日期
+            check_missing: 是否强制检查并刷新数据（即使已有数据）
             
         Returns:
             StockSelection 对象列表
         """
         results = self.get_by_date(query_date)
-        if results:
+        
+        # 如果没有数据，或者强制检查刷新，则从数据源获取
+        if not results or check_missing:
+            logger.info(f"数据库未找到 {query_date} 的选股数据或强制刷新，从数据源获取")
+            self.save_from_fetcher(query_date)
+            results = self.get_by_date(query_date)
+        else:
             logger.debug(f"从数据库获取选股数据: {query_date}, {len(results)} 条")
-            return results
         
-        logger.info(f"数据库未找到 {query_date} 的选股数据，从数据源获取")
-        self.save_from_fetcher(query_date)
-        
-        return self.get_by_date(query_date)
+        return results
     
     def get_all_industries(self, query_date: Optional[date] = None) -> List[str]:
         """

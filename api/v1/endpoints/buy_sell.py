@@ -8,9 +8,11 @@
 1. GET /api/v1/buy 获取买入信号股票
 2. GET /api/v1/sell 获取卖出信号股票
 3. 基于技术指标筛选股票
+4. 生成交易理由
 """
 
 import logging
+import re
 from datetime import date as DateType, datetime
 from typing import Optional, Dict, List
 
@@ -25,6 +27,201 @@ router = APIRouter()
 sell_router = APIRouter()
 
 
+def is_trading_day(check_date: DateType) -> bool:
+    """
+    检查是否为交易日（中国A股）
+
+    Args:
+        check_date: 要检查的日期
+
+    Returns:
+        是否为交易日（周一到周五且非节假日返回True，周六周日或节假日返回False）
+    """
+    if check_date.weekday() >= 5:
+        return False
+
+    month = check_date.month
+    day = check_date.day
+
+    holidays_2026 = [
+        (1, 1),
+        (5, 1), (5, 2), (5, 3), (5, 4), (5, 5),
+        (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7),
+        (4, 4), (4, 5), (4, 6),
+        (6, 19), (6, 20), (6, 21),
+        (9, 25), (9, 26), (9, 27),
+    ]
+
+    return (month, day) not in holidays_2026
+
+
+def _is_st_stock(name: str) -> bool:
+    """检查是否为ST股票（*ST、ST、退）"""
+    if not name:
+        return False
+    name_upper = name.upper()
+    return '*ST' in name_upper or 'ST' in name_upper or '退' in name
+
+
+def _regex_match(text: str, pattern: str) -> bool:
+    """
+    使用正则表达式匹配文本
+    
+    Args:
+        text: 待匹配的文本
+        pattern: 正则表达式模式（不区分大小写）
+    
+    Returns:
+        是否匹配成功
+    """
+    if not text or not pattern:
+        return False
+    try:
+        return bool(re.search(pattern, text, re.IGNORECASE))
+    except re.error:
+        return pattern.lower() in text.lower()
+
+
+def _generate_buy_reason(item) -> str:
+    """生成买入理由"""
+    reasons = []
+
+    # MACD金叉
+    if getattr(item, 'macd_golden_fork', None) == '1':
+        reasons.append("MACD金叉")
+
+    # KDJ金叉
+    if getattr(item, 'kdj_golden_fork', None) == '1':
+        reasons.append("KDJ金叉")
+
+    # 放量突破
+    if getattr(item, 'break_through', None) == '1':
+        reasons.append("放量突破")
+
+    # 均线多头排列
+    if getattr(item, 'long_avg_array', None) == '1':
+        reasons.append("均线多头排列")
+
+    # 低位资金净流入
+    if getattr(item, 'low_funds_inflow', None) == '1':
+        reasons.append("低位资金净流入")
+
+    # 向上突破均线
+    if getattr(item, 'breakup_ma_5days', None) == '1':
+        reasons.append("突破5日均线")
+    elif getattr(item, 'breakup_ma_10days', None) == '1':
+        reasons.append("突破10日均线")
+
+    # K线形态买入信号
+    if getattr(item, 'one_dayang_line', None) == '1':
+        reasons.append("大阳线")
+    elif getattr(item, 'two_dayang_lines', None) == '1':
+        reasons.append("两阳夹一阴")
+    elif getattr(item, 'rise_sun', None) == '1':
+        reasons.append("旭日东升")
+    elif getattr(item, 'power_fulgun', None) == '1':
+        reasons.append("多方炮")
+    elif getattr(item, 'morning_star', None) == '1':
+        reasons.append("早晨之星")
+    elif getattr(item, 'first_dawn', None) == '1':
+        reasons.append("曙光初现")
+    elif getattr(item, 'reversing_hammer', None) == '1':
+        reasons.append("倒锤头")
+
+    # 趋势位置分析
+    try:
+        if item.change_rate and float(item.change_rate) > 5:
+            reasons.append("强势上涨")
+        elif item.change_rate and float(item.change_rate) < -5:
+            reasons.append("超跌反弹机会")
+    except (ValueError, TypeError):
+        pass
+
+    # 成交量分析
+    try:
+        if item.volume_ratio and float(item.volume_ratio) > 2:
+            reasons.append("成交量异常放大")
+        elif item.volume_ratio and float(item.volume_ratio) < 0.5:
+            reasons.append("缩量整理")
+    except (ValueError, TypeError):
+        pass
+
+    # 均线支撑分析
+    try:
+        if item.ma5 and item.ma20 and float(item.ma5) > float(item.ma20):
+            reasons.append("MA5>MA20多头")
+        elif item.ma10 and item.ma20 and float(item.ma10) > float(item.ma20):
+            reasons.append("短期均线上行")
+    except (ValueError, TypeError):
+        pass
+
+    if not reasons:
+        return "技术面偏强"
+
+    return "、".join(reasons[:3])
+
+
+def _generate_sell_reason(item) -> str:
+    """生成卖出理由"""
+    reasons = []
+
+    # 均线空头排列
+    if getattr(item, 'short_avg_array', None) == '1':
+        reasons.append("均线空头排列")
+
+    # 高位资金净流出
+    if getattr(item, 'high_funds_outflow', None) == '1':
+        reasons.append("高位资金净流出")
+
+    # 连涨放量
+    if getattr(item, 'upper_large_volume', None) == '1':
+        reasons.append("高位放量滞涨")
+
+    # K线形态卖出信号
+    if getattr(item, 'shooting_star', None) == '1':
+        reasons.append("射击之星")
+    elif getattr(item, 'evening_star', None) == '1':
+        reasons.append("黄昏之星")
+    elif getattr(item, 'black_cloud_tops', None) == '1':
+        reasons.append("乌云盖顶")
+    elif getattr(item, 'bearish_engulfing', None) == '1':
+        reasons.append("穿头破脚")
+    elif getattr(item, 'down_7days', None) == '1':
+        reasons.append("七连阴")
+
+    # 趋势位置分析
+    try:
+        if item.change_rate and float(item.change_rate) < -5:
+            reasons.append("大幅下跌")
+        elif item.change_rate and float(item.change_rate) > 5:
+            reasons.append("追高风险")
+    except (ValueError, TypeError):
+        pass
+
+    # 成交量分析
+    try:
+        if item.volume_ratio and float(item.volume_ratio) > 2:
+            reasons.append("放量下跌")
+        elif item.volume_ratio and float(item.volume_ratio) < 0.5:
+            reasons.append("缩量下跌动能不足")
+    except (ValueError, TypeError):
+        pass
+
+    # 均线压力分析
+    try:
+        if item.ma5 and item.ma20 and float(item.ma5) < float(item.ma20):
+            reasons.append("MA5<MA20空头")
+        elif item.ma10 and item.ma20 and float(item.ma10) < float(item.ma20):
+            reasons.append("短期均线下行")
+    except (ValueError, TypeError):
+        pass
+
+    if not reasons:
+        return "技术面偏弱"
+
+    return "、".join(reasons[:3])
+
+
 def _filter_buy_signals(results: List) -> List:
     """
     筛选买入信号股票
@@ -37,6 +234,10 @@ def _filter_buy_signals(results: List) -> List:
     """
     filtered = []
     for item in results:
+        # 过滤ST股票
+        if _is_st_stock(getattr(item, 'name', None)):
+            continue
+
         # 检查买入信号
         has_buy_signal = False
 
@@ -93,6 +294,10 @@ def _filter_sell_signals(results: List) -> List:
     """
     filtered = []
     for item in results:
+        # 过滤ST股票
+        if _is_st_stock(getattr(item, 'name', None)):
+            continue
+
         # 检查卖出信号
         has_sell_signal = False
 
@@ -123,13 +328,14 @@ def _filter_sell_signals(results: List) -> List:
     return filtered
 
 
-def _format_stock_data(items: List) -> List[Dict]:
+def _format_stock_data(items: List, is_buy: bool = True) -> List[Dict]:
     """格式化股票数据为返回格式"""
     formatted = []
     for item in items:
         formatted.append({
             "code": str(item.code).strip(),
             "name": str(item.name).strip(),
+            "reason": _generate_buy_reason(item) if is_buy else _generate_sell_reason(item),
             "new_price": item.new_price,
             "change_rate": item.change_rate,
             "volume_ratio": item.volume_ratio,
@@ -191,7 +397,7 @@ def get_buy_stocks(
 ):
     """
     获取买入信号股票
-    
+
     基于以下技术指标筛选：
     - MACD金叉
     - KDJ金叉
@@ -215,18 +421,25 @@ def get_buy_stocks(
         else:
             query_date = DateType.today()
 
-        results = repo.get_or_fetch(query_date)
+        # 检查是否为交易日
+        trading_day = is_trading_day(query_date)
+        notice_message = None
 
-        # 应用买入信号筛选
-        results = _filter_buy_signals(results)
+        if not trading_day:
+            notice_message = f"{query_date.strftime('%Y-%m-%d')} 是非交易日（周末或节假日），暂无买入信号"
+            results = []
+        else:
+            results = repo.get_or_fetch(query_date)
+            # 应用买入信号筛选（已包含ST过滤）
+            results = _filter_buy_signals(results)
 
-        # 关键字过滤
+        # 关键字过滤（支持正则表达式）
         if keyword:
-            keyword_lower = keyword.lower().strip()
-            results = [r for r in results if 
-                       keyword_lower in str(r.code).lower() or 
-                       keyword_lower in str(r.name).lower()]
-        
+            keyword_pattern = keyword.strip()
+            results = [r for r in results if
+                       _regex_match(str(r.code), keyword_pattern) or
+                       _regex_match(str(r.name), keyword_pattern)]
+
         # 行业过滤
         if industry:
             industry_lower = industry.lower().strip()
@@ -239,12 +452,12 @@ def get_buy_stocks(
 
         total_count = len(results)
         total_pages = (total_count + page_size - 1) // page_size
-        
+
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
         paginated_results = results[start_idx:end_idx]
 
-        formatted_data = _format_stock_data(paginated_results)
+        formatted_data = _format_stock_data(paginated_results, is_buy=True)
 
         return {
             "date": query_date.isoformat(),
@@ -252,9 +465,11 @@ def get_buy_stocks(
             "total_pages": total_pages,
             "current_page": page,
             "page_size": page_size,
-            "data": formatted_data
+            "data": formatted_data,
+            "is_trading_day": trading_day,
+            "message": notice_message
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -288,7 +503,7 @@ def get_sell_stocks(
 ):
     """
     获取卖出信号股票
-    
+
     基于以下技术指标筛选：
     - 均线空头排列
     - 高位资金净流出
@@ -308,18 +523,25 @@ def get_sell_stocks(
         else:
             query_date = DateType.today()
 
-        results = repo.get_or_fetch(query_date)
+        # 检查是否为交易日
+        trading_day = is_trading_day(query_date)
+        notice_message = None
 
-        # 应用卖出信号筛选
-        results = _filter_sell_signals(results)
+        if not trading_day:
+            notice_message = f"{query_date.strftime('%Y-%m-%d')} 是非交易日（周末或节假日），暂无卖出信号"
+            results = []
+        else:
+            results = repo.get_or_fetch(query_date)
+            # 应用卖出信号筛选（已包含ST过滤）
+            results = _filter_sell_signals(results)
 
-        # 关键字过滤
+        # 关键字过滤（支持正则表达式）
         if keyword:
-            keyword_lower = keyword.lower().strip()
-            results = [r for r in results if 
-                       keyword_lower in str(r.code).lower() or 
-                       keyword_lower in str(r.name).lower()]
-        
+            keyword_pattern = keyword.strip()
+            results = [r for r in results if
+                       _regex_match(str(r.code), keyword_pattern) or
+                       _regex_match(str(r.name), keyword_pattern)]
+
         # 行业过滤
         if industry:
             industry_lower = industry.lower().strip()
@@ -332,12 +554,12 @@ def get_sell_stocks(
 
         total_count = len(results)
         total_pages = (total_count + page_size - 1) // page_size
-        
+
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
         paginated_results = results[start_idx:end_idx]
 
-        formatted_data = _format_stock_data(paginated_results)
+        formatted_data = _format_stock_data(paginated_results, is_buy=False)
 
         return {
             "date": query_date.isoformat(),
@@ -345,9 +567,11 @@ def get_sell_stocks(
             "total_pages": total_pages,
             "current_page": page,
             "page_size": page_size,
-            "data": formatted_data
+            "data": formatted_data,
+            "is_trading_day": trading_day,
+            "message": notice_message
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:

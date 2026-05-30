@@ -296,7 +296,7 @@ const LimitUpPage: React.FC = () => {
                     type="text"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    placeholder="代码/名称/原因..."
+                    placeholder="代码/名称/原因(支持正则)..."
                     className="input-enhanced pl-3 pr-8 w-56"
                   />
                   {searchKeyword && (

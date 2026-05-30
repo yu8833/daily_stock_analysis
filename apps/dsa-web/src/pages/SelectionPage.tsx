@@ -201,7 +201,15 @@ interface SelectionStock {
   downnday: number | null;
   listing_yield_year: number | null;
   listing_volatility_year: number | null;
+  mutual_netbuy_amt: number | null;
   hold_ratio: number | null;
+  // 新增字段
+  par_dividend: number | null;
+  predict_type: string | null;
+  is_issue_break: string | null;
+  is_bps_break: string | null;
+  now_newhigh: string | null;
+  now_newlow: string | null;
 }
 
 type SortField = keyof SelectionStock;
@@ -399,7 +407,14 @@ const COLUMN_CONFIG: ColumnConfig<SelectionStock>[] = [
   { key: 'downnday', label: '连跌天数', width: 'w-18', align: 'right', type: 'number' },
   { key: 'listing_yield_year', label: '上市以来年化收益率', width: 'w-32', align: 'right', type: 'percent' },
   { key: 'listing_volatility_year', label: '上市以来年化波动率', width: 'w-32', align: 'right', type: 'percent' },
+  { key: 'mutual_netbuy_amt', label: '沪深股通净买入', width: 'w-24', align: 'right', type: 'money' },
   { key: 'hold_ratio', label: '沪深股通持股比例', width: 'w-28', align: 'right', type: 'percent' },
+  { key: 'par_dividend', label: '每股红股', width: 'w-16', align: 'right', type: 'number' },
+  { key: 'predict_type', label: '业绩预告', width: 'w-18', align: 'center', type: 'flag' },
+  { key: 'is_issue_break', label: '破发', width: 'w-14', align: 'center', type: 'flag' },
+  { key: 'is_bps_break', label: '破净', width: 'w-14', align: 'center', type: 'flag' },
+  { key: 'now_newhigh', label: '今日历史新高', width: 'w-20', align: 'center', type: 'flag' },
+  { key: 'now_newlow', label: '今日历史新低', width: 'w-20', align: 'center', type: 'flag' },
 ];
 
 const SelectionPage: React.FC = () => {
@@ -421,7 +436,8 @@ const SelectionPage: React.FC = () => {
   const [stockList, setStockList] = useState<SelectionStock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
@@ -467,6 +483,7 @@ const SelectionPage: React.FC = () => {
       setStockList(result.data || []);
       setTotalCount(result.count || 0);
       setTotalPages(result.total_pages || 0);
+      setNoticeMessage(result.message || null);
     } catch (err) {
       console.error('获取选股数据失败:', err);
       setError('获取选股数据失败，请稍后重试');
@@ -610,7 +627,7 @@ const SelectionPage: React.FC = () => {
                     type="text"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    placeholder="代码/名称/行业..."
+                    placeholder="代码/名称/行业(支持正则)..."
                     className="input-enhanced pl-3 pr-8 w-56"
                   />
                   {searchKeyword && (
@@ -641,6 +658,16 @@ const SelectionPage: React.FC = () => {
             </div>
           </div>
         </Card>
+
+        {/* Notice Message */}
+        {noticeMessage && (
+          <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-200 dark:border-blue-700">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-sm text-blue-800 dark:text-blue-200">{noticeMessage}</span>
+            </div>
+          </Card>
+        )}
       </section>
 
       {error ? (

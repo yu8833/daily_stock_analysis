@@ -41,6 +41,7 @@ interface SellStock {
   black_cloud_tops: string | null;
   bearish_engulfing: string | null;
   down_7days: string | null;
+  reason?: string;
 }
 
 type SortField = keyof SellStock;
@@ -49,6 +50,7 @@ type SortOrder = 'asc' | 'desc';
 const COLUMN_CONFIG: ColumnConfig<SellStock>[] = [
   { key: 'code', label: '代码', width: 'w-20', align: 'left', type: 'text' },
   { key: 'name', label: '名称', width: 'w-24', align: 'left', type: 'text' },
+  { key: 'reason', label: '卖出理由', width: 'w-64', align: 'left', type: 'text' },
   { key: 'short_avg_array', label: '均线空头', width: 'w-20', align: 'center', type: 'flag' },
   { key: 'high_funds_outflow', label: '高位资金净流出', width: 'w-28', align: 'center', type: 'flag' },
   { key: 'upper_large_volume', label: '连涨放量', width: 'w-20', align: 'center', type: 'flag' },
@@ -90,7 +92,8 @@ const SellPage: React.FC = () => {
   const [stockList, setStockList] = useState<SellStock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
@@ -136,6 +139,7 @@ const SellPage: React.FC = () => {
       setStockList(result.data || []);
       setTotalCount(result.count || 0);
       setTotalPages(result.total_pages || 0);
+      setNoticeMessage(result.message || null);
     } catch (err) {
       console.error('获取卖出信号数据失败:', err);
       setError('获取卖出信号数据失败，请稍后重试');
@@ -282,7 +286,7 @@ const SellPage: React.FC = () => {
                     type="text"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    placeholder="代码/名称/行业..."
+                    placeholder="代码/名称/行业(支持正则)..."
                     className="input-enhanced pl-3 pr-8 w-56"
                   />
                   {searchKeyword && (
@@ -313,6 +317,16 @@ const SellPage: React.FC = () => {
             </div>
           </div>
         </Card>
+
+        {/* Notice Message */}
+        {noticeMessage && (
+          <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-200 dark:border-blue-700">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-sm text-blue-800 dark:text-blue-200">{noticeMessage}</span>
+            </div>
+          </Card>
+        )}
       </section>
 
       {error ? (

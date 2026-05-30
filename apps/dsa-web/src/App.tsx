@@ -20,6 +20,7 @@ const LimitUpPage = lazy(() => import('./pages/LimitUpPage'));
 const SelectionPage = lazy(() => import('./pages/SelectionPage'));
 const BuyPage = lazy(() => import('./pages/BuyPage'));
 const SellPage = lazy(() => import('./pages/SellPage'));
+const PatternPage = lazy(() => import('./pages/PatternPage'));
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -81,6 +82,7 @@ const AppContent: React.FC = () => {
         <Route path="/select" element={<SelectionPage />} />
         <Route path="/buy" element={<BuyPage />} />
         <Route path="/sell" element={<SellPage />} />
+        <Route path="/pattern" element={<PatternPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

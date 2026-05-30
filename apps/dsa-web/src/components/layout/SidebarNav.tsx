@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { BarChart3, Home, LogOut, MessageSquareQuote, Settings2, TrendingUp, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { BarChart3, Home, LogOut, MessageSquareQuote, Settings2, TrendingUp, ArrowUpCircle, ArrowDownCircle, CandlestickChart } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAgentChatStore } from '../../stores/agentChatStore';
@@ -30,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'buy', label: '买入', to: '/buy', icon: ArrowUpCircle },
   { key: 'sell', label: '卖出', to: '/sell', icon: ArrowDownCircle },
   { key: 'limitup', label: '涨停', to: '/limitup', icon: BarChart3 },
+  { key: 'pattern', label: 'K线', to: '/pattern', icon: CandlestickChart },
   { key: 'settings', label: '设置', to: '/settings', icon: Settings2 },
 ];
 

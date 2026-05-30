@@ -9,6 +9,7 @@
 """
 
 import logging
+import re
 from datetime import datetime
 from datetime import date as date_class
 from datetime import time as time_class
@@ -23,6 +24,25 @@ logger = logging.getLogger(__name__)
 
 MARKET_OPEN_TIME = time_class(9, 30)
 MARKET_CLOSE_TIME = time_class(15, 0)
+
+
+def _regex_match(text: str, pattern: str) -> bool:
+    """
+    使用正则表达式匹配文本
+    
+    Args:
+        text: 待匹配的文本
+        pattern: 正则表达式模式（不区分大小写）
+    
+    Returns:
+        是否匹配成功
+    """
+    if not text or not pattern:
+        return False
+    try:
+        return bool(re.search(pattern, text, re.IGNORECASE))
+    except re.error:
+        return pattern.lower() in text.lower()
 
 
 def is_trading_day(check_date: date_class) -> bool:
@@ -158,19 +178,15 @@ def get_limit_up_data(
         has_keyword = keyword and keyword.strip()
         results = repo.get_or_fetch(query_date, check_missing=not has_keyword)
 
-        # 关键字过滤
+        # 关键字过滤（支持正则表达式）
         if has_keyword:
-            keyword_lower = keyword.lower().strip()
+            keyword_pattern = keyword.strip()
             filtered_results = []
             for item in results:
-                code = str(item.code or '').lower()
-                name = str(item.name or '').lower()
-                title = str(item.title or '').lower()
-                reason = str(item.reason or '').lower()
-                if (keyword_lower in code or
-                    keyword_lower in name or
-                    keyword_lower in title or
-                    keyword_lower in reason):
+                if (_regex_match(str(item.code or ''), keyword_pattern) or
+                    _regex_match(str(item.name or ''), keyword_pattern) or
+                    _regex_match(str(item.title or ''), keyword_pattern) or
+                    _regex_match(str(item.reason or ''), keyword_pattern)):
                     filtered_results.append(item)
             results = filtered_results
 

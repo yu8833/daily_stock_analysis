@@ -664,6 +664,38 @@ def run_full_analysis(
         logger.exception(f"分析流程执行失败: {e}")
 
 
+def start_selection_refresh_in_background():
+    """在后台启动选股数据自动刷新"""
+    import threading
+    import time
+    import schedule
+    from src.repositories.selection_repo import SelectionRepository
+    from datetime import date
+
+    def refresh_task():
+        try:
+            repo = SelectionRepository()
+            today = date.today()
+            results = repo.get_or_fetch(today, check_missing=True)
+            logger.info(f"自动刷新 {today} 选股数据，共 {len(results)} 条")
+        except Exception as e:
+            logger.error(f"自动刷新选股数据失败: {e}")
+
+    def run_scheduler():
+        # 设置定时任务
+        schedule.every().day.at("11:30").do(refresh_task)
+        schedule.every().day.at("15:00").do(refresh_task)
+        logger.info("已设置选股数据每日 11:30 和 15:00 自动刷新")
+        
+        while True:
+            schedule.run_pending()
+            time.sleep(60)  # 每分钟检查一次
+
+    thread = threading.Thread(target=run_scheduler, daemon=True)
+    thread.start()
+    logger.info("选股数据自动刷新后台线程已启动")
+
+
 def start_api_server(host: str, port: int, config: Config) -> None:
     """
     在后台线程启动 FastAPI 服务
@@ -860,6 +892,7 @@ def main() -> int:
             logger.warning("前端静态资源未就绪，继续启动 FastAPI 服务（Web 页面可能不可用）")
         try:
             start_api_server(host=args.host, port=args.port, config=config)
+            start_selection_refresh_in_background()
             bot_clients_started = True
         except Exception as e:
             logger.error(f"启动 FastAPI 服务失败: {e}")

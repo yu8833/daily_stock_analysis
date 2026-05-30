@@ -24,6 +24,54 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def is_trading_day(check_date: DateType) -> bool:
+    """
+    检查是否为交易日（中国A股）
+
+    Args:
+        check_date: 要检查的日期
+
+    Returns:
+        是否为交易日（周一到周五且非节假日返回True，周六周日或节假日返回False）
+    """
+    if check_date.weekday() >= 5:
+        return False
+
+    year = check_date.year
+    month = check_date.month
+    day = check_date.day
+
+    holidays_2026 = [
+        (1, 1),
+        (5, 1), (5, 2), (5, 3), (5, 4), (5, 5),
+        (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7),
+        (4, 4), (4, 5), (4, 6),
+        (6, 19), (6, 20), (6, 21),
+        (9, 25), (9, 26), (9, 27),
+    ]
+
+    return (month, day) not in holidays_2026
+
+
+def _regex_match(text: str, pattern: str) -> bool:
+    """
+    使用正则表达式匹配文本
+    
+    Args:
+        text: 待匹配的文本
+        pattern: 正则表达式模式（不区分大小写）
+    
+    Returns:
+        是否匹配成功
+    """
+    if not text or not pattern:
+        return False
+    try:
+        return bool(re.search(pattern, text, re.IGNORECASE))
+    except re.error:
+        return pattern.lower() in text.lower()
+
+
 @router.get(
     "/",
     responses={
@@ -100,7 +148,15 @@ def get_selection_data(
         else:
             query_date = DateType.today()
 
-        results = repo.get_or_fetch(query_date)
+        # 检查是否为交易日
+        trading_day = is_trading_day(query_date)
+        notice_message = None
+        
+        if not trading_day:
+            notice_message = f"{query_date.strftime('%Y-%m-%d')} 是非交易日（周末或节假日），暂无选股数据"
+            results = []
+        else:
+            results = repo.get_or_fetch(query_date)
 
         # 解析通用筛选参数 - 支持 filters[columnKey] 格式
         column_filters: Dict[str, List[str]] = {}
@@ -193,20 +249,16 @@ def get_selection_data(
         if is_sz50 is not None:
             results = [r for r in results if str(r.is_sz50).strip() == ('Y' if is_sz50 else 'N')]
         
+        # 关键字过滤（支持正则表达式）
         if keyword:
-            keyword_lower = keyword.lower().strip()
+            keyword_pattern = keyword.strip()
             filtered_results = []
             for item in results:
-                code = str(item.code or '').lower()
-                name = str(item.name or '').lower()
-                industry = str(item.industry or '').lower()
-                concept = str(item.concept or '').lower()
-                area = str(item.area or '').lower()
-                if (keyword_lower in code or
-                    keyword_lower in name or
-                    keyword_lower in industry or
-                    keyword_lower in concept or
-                    keyword_lower in area):
+                if (_regex_match(str(item.code or ''), keyword_pattern) or
+                    _regex_match(str(item.name or ''), keyword_pattern) or
+                    _regex_match(str(item.industry or ''), keyword_pattern) or
+                    _regex_match(str(item.concept or ''), keyword_pattern) or
+                    _regex_match(str(item.area or ''), keyword_pattern)):
                     filtered_results.append(item)
             results = filtered_results
 
@@ -625,7 +677,11 @@ def get_selection_data(
                 
                 # 分红相关
                 "par_dividend_pretax": item.par_dividend_pretax,
+                "par_dividend": item.par_dividend,
                 "par_it_equity": item.par_it_equity,
+                
+                # 业绩预告
+                "predict_type": str(item.predict_type).strip() if item.predict_type else None,
                 
                 # 股东/高管变动
                 "holder_change_3m": item.holder_change_3m,
@@ -661,6 +717,12 @@ def get_selection_data(
                 "concern_rank_7days": item.concern_rank_7days,
                 "browse_rank": item.browse_rank,
                 
+                # 破净/破发
+                "is_issue_break": str(item.is_issue_break).strip() if item.is_issue_break else None,
+                "is_bps_break": str(item.is_bps_break).strip() if item.is_bps_break else None,
+                "now_newhigh": str(item.now_newhigh).strip() if item.now_newhigh else None,
+                "now_newlow": str(item.now_newlow).strip() if item.now_newlow else None,
+                
                 # 均线数据
                 "ma5": item.ma5,
                 "ma10": item.ma10,
@@ -676,7 +738,9 @@ def get_selection_data(
             "total_pages": total_pages,
             "current_page": page,
             "page_size": page_size,
-            "data": formatted_data
+            "data": formatted_data,
+            "is_trading_day": trading_day,
+            "message": notice_message
         }
     
     except HTTPException:
@@ -899,5 +963,64 @@ def fetch_selection_data(
             detail={
                 "error": "internal_error",
                 "message": f"获取选股数据失败: {str(e)}"
+            }
+        )
+
+
+@router.post(
+    "/refresh",
+    responses={
+        200: {"description": "数据刷新成功"},
+        500: {"description": "服务器错误", "model": ErrorResponse},
+    },
+    summary="刷新选股数据",
+    description="检查并刷新指定日期的选股数据"
+)
+def refresh_selection_data(
+    date: Optional[str] = Query(None, description="日期（YYYY-MM-DD），默认当天")
+):
+    """
+    刷新选股数据
+    
+    Args:
+        date: 日期（YYYY-MM-DD），默认当天
+    
+    Returns:
+        刷新结果
+    
+    Raises:
+        HTTPException: 500 - 刷新数据失败
+    """
+    try:
+        repo = SelectionRepository()
+        
+        if date:
+            try:
+                query_date = datetime.strptime(date, '%Y-%m-%d').date()
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"error": "invalid_date", "message": "日期格式错误，应为 YYYY-MM-DD"}
+                )
+        else:
+            query_date = DateType.today()
+        
+        results = repo.get_or_fetch(query_date, check_missing=True)
+        
+        return {
+            "date": query_date.isoformat(),
+            "count": len(results),
+            "message": f"成功刷新 {len(results)} 条选股数据"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"刷新选股数据失败: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "internal_error",
+                "message": f"刷新选股数据失败: {str(e)}"
             }
         )

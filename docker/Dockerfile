@@ -34,7 +34,23 @@ RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.li
     libjpeg62-turbo \
     libxrender1 \
     libxext6 \
+    build-essential \
+    autoconf \
+    automake \
+    libtool \
+    wget \
     && rm -rf /var/lib/apt/lists/*
+
+# 安装 TA-Lib C 库
+RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz -O ta-lib.tar.gz && \
+    tar -xzf ta-lib.tar.gz && \
+    cd ta-lib && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf ta-lib ta-lib.tar.gz && \
+    ldconfig
 
 # 创建非 root 用户 (UID 1000)
 RUN groupadd -g 1000 dsa && \

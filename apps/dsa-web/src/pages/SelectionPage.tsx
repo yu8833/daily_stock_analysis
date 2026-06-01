@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, Badge, Button } from '../components/common';
-import { Download, X, BarChart3 } from 'lucide-react';
+import { selectionApi } from '../api/selection';
+import { Download, X, BarChart3, RefreshCw } from 'lucide-react';
 import { DataTable } from '../components/common/DataTable';
 import { TablePagination } from '../components/common/TablePagination';
 import type { ColumnConfig } from '../utils/format';
@@ -527,6 +528,8 @@ const SelectionPage: React.FC = () => {
   const [flagFilters, setFlagFilters] = useState<Record<string, '是' | '否' | '-' | ''>>({});
   
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
+  const [lastRefreshTime, setLastRefreshTime] = useState<string>('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -535,7 +538,10 @@ const SelectionPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchKeyword]);
 
-  const fetchSelectionData = async () => {
+  const fetchSelectionData = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setIsRefreshing(true);
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -567,11 +573,15 @@ const SelectionPage: React.FC = () => {
       setTotalCount(result.count || 0);
       setTotalPages(result.total_pages || 0);
       setNoticeMessage(result.message || null);
+      
+      const now = new Date();
+      setLastRefreshTime(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`);
     } catch (err) {
       console.error('获取选股数据失败:', err);
       setError('获取选股数据失败，请稍后重试');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -588,6 +598,52 @@ const SelectionPage: React.FC = () => {
     setCurrentPage(1);
     void fetchSelectionData();
   }, [flagFilters]);
+
+  const handleManualRefresh = async () => {
+    setCurrentPage(1);
+    setIsRefreshing(true);
+    try {
+      await selectionApi.fetchSelection(selectedDate);
+      void fetchSelectionData(true);
+    } catch (error) {
+      console.error('刷新选股数据失败:', error);
+      setError('刷新选股数据失败，请稍后重试');
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    const scheduleDailyRefresh = () => {
+      const now = new Date();
+      const targetTime = new Date();
+      targetTime.setHours(15, 30, 0, 0);
+      
+      if (now > targetTime) {
+        targetTime.setDate(targetTime.getDate() + 1);
+      }
+      
+      const delay = targetTime.getTime() - now.getTime();
+      
+      setTimeout(() => {
+        setCurrentPage(1);
+        void fetchSelectionData(true);
+        
+        const interval = 24 * 60 * 60 * 1000;
+        setInterval(() => {
+          setCurrentPage(1);
+          void fetchSelectionData(true);
+        }, interval);
+      }, delay);
+    };
+
+    const dayOfWeek = new Date().getDay();
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      scheduleDailyRefresh();
+    }
+
+    return () => {
+    };
+  }, []);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -765,13 +821,29 @@ const SelectionPage: React.FC = () => {
                 className="btn-with-icon"
               >
                 <Download size={16} />
-                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出'}
+                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出CSV'}
               </Button>
             </div>
 
-            <div className="stat-badge bg-gradient-to-r from-purple-500 to-indigo-500 text-white">
-              <BarChart3 size={16} className="mr-1" />
-              {totalCount} 只股票
+            <div className="flex items-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={handleManualRefresh}
+                className="btn-with-icon"
+                disabled={isRefreshing}
+              >
+                <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+                {isRefreshing ? '刷新中...' : '刷新'}
+              </Button>
+              {lastRefreshTime && (
+                <span className="text-xs text-gray-400">
+                  最后刷新: {lastRefreshTime}
+                </span>
+              )}
+              <div className="stat-badge bg-gradient-to-r from-purple-500 to-indigo-500 text-white">
+                <BarChart3 size={16} className="mr-1" />
+                {totalCount} 只股票
+              </div>
             </div>
           </div>
         </Card>
@@ -804,7 +876,7 @@ const SelectionPage: React.FC = () => {
           </div>
         </Card>
       ) : (
-        <Card>
+        <Card padding="none">
           <DataTable
             columns={customColumns}
             groups={COLUMN_GROUPS}

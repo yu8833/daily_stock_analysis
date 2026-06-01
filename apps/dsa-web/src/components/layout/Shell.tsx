@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Outlet } from 'react-router-dom';
 import { Drawer } from '../common/Drawer';
 import { SidebarNav } from './SidebarNav';
@@ -13,7 +13,7 @@ type ShellProps = {
 
 export const Shell: React.FC<ShellProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const collapsed = false;
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (!mobileOpen) {
@@ -48,19 +48,29 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
         </div>
       </div>
 
-      <div className="mx-auto flex min-h-screen w-full max-w-[1680px] px-3 py-3 sm:px-4 sm:py-4 lg:px-5">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1680px] p-1 sm:p-1.5 lg:p-2">
         <aside
           className={cn(
-            'sticky top-3 z-40 hidden shrink-0 overflow-visible rounded-[1.5rem] border border-[var(--shell-sidebar-border)] bg-card/72 p-2 shadow-soft-card backdrop-blur-sm transition-[width] duration-200 lg:flex',
-            'max-h-[calc(100vh-1.5rem)] self-start sm:top-4 sm:max-h-[calc(100vh-2rem)]',
+            'sticky top-1.5 z-40 hidden shrink-0 overflow-visible rounded-2xl border border-[var(--shell-sidebar-border)] bg-card/72 shadow-soft-card backdrop-blur-sm transition-[width,margin] duration-200 lg:flex',
+            'max-h-[calc(100vh-1rem)] self-start sm:top-2 sm:max-h-[calc(100vh-1rem)]',
             collapsed ? 'w-[64px]' : 'w-[116px]'
           )}
           aria-label="桌面侧边导航"
         >
-          <SidebarNav collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />
+          <div className="flex flex-col h-full w-full">
+            <SidebarNav collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />
+            <button
+              type="button"
+              onClick={() => setCollapsed(!collapsed)}
+              className="mt-auto flex items-center justify-center p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              aria-label={collapsed ? '展开菜单' : '收起菜单'}
+            >
+              {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            </button>
+          </div>
         </aside>
 
-        <main className="min-h-0 min-w-0 flex-1 pt-14 lg:pl-3 lg:pt-0 touch-pan-y">
+        <main className="min-h-0 min-w-0 flex-1 pt-12 lg:pl-2 lg:pt-0 touch-pan-y">
           {children ?? <Outlet />}
         </main>
       </div>

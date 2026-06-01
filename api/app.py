@@ -125,6 +125,7 @@ def _missing_asset_media_type(asset_path: str) -> str:
 from api.v1 import api_v1_router
 from api.middlewares.auth import add_auth_middleware
 from api.middlewares.error_handler import add_error_handlers
+from api.middlewares.compression import GzipMiddleware
 from api.v1.schemas.common import HealthResponse
 from src.data.stock_index_loader import find_existing_stock_index_path
 from src.services.system_config_service import SystemConfigService
@@ -247,6 +248,9 @@ def create_app(static_dir: Optional[Path] = None) -> FastAPI:
     )
 
     add_auth_middleware(app)
+    
+    # 添加Gzip压缩中间件
+    app.add_middleware(GzipMiddleware, minimum_size=1024, compress_level=6)
     
     # ============================================================
     # 注册路由

@@ -122,7 +122,7 @@ export function DataTable<T>({
   if (groupedColumns.length === 0) {
     return (
       <div className="relative h-[600px]">
-        <div className="overflow-x-auto overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800 rounded-xl h-full">
+        <div className="overflow-x-auto overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800 h-full">
           <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
             <thead className="sticky top-0 z-20 bg-gray-50 dark:bg-gray-800 shadow-sm">
               <tr className="table-header-cell">
@@ -252,7 +252,7 @@ export function DataTable<T>({
 
   return (
     <div className="relative h-[600px]">
-      <div className="overflow-x-auto overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800 rounded-xl h-full">
+      <div className="overflow-x-auto overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800 h-full">
         <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
           <thead className="sticky top-0 z-20 bg-gray-50 dark:bg-gray-800 shadow-sm">
             <tr>

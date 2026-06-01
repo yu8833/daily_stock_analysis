@@ -318,7 +318,7 @@ const LimitUpPage: React.FC = () => {
                 className="btn-with-icon"
               >
                 <Download size={16} />
-                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出'}
+                {selectedCodes.size > 0 ? `导出选中(${selectedCodes.size})` : '导出CSV'}
               </Button>
             </div>
 

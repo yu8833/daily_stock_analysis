@@ -19,6 +19,7 @@ import pandas as pd
 from sqlalchemy import select, and_, desc, delete
 
 from src.storage import DatabaseManager, StockSelection, StockDaily
+from src.services.cache_service import get_cache_manager
 from data_provider.eastmoney_selection_fetcher import EastmoneySelectionFetcher
 
 # 策略模块在 API 层导入，不在数据保存时计算
@@ -36,30 +37,48 @@ class SelectionRepository:
     def __init__(self, db_manager: Optional[DatabaseManager] = None):
         """
         初始化数据访问层
-        
+
         Args:
             db_manager: 数据库管理器（可选，默认使用单例）
         """
         self.db = db_manager or DatabaseManager.get_instance()
         self.fetcher = EastmoneySelectionFetcher()
-    
-    def get_by_date(self, query_date: date) -> List[StockSelection]:
+        self.cache = get_cache_manager()
+        self._selection_cache = self.cache.get_cache("selection", max_size=100, default_ttl=600)
+
+    def get_by_date(self, query_date: date, use_cache: bool = True) -> List[StockSelection]:
         """
         获取指定日期的选股数据
-        
+
         Args:
             query_date: 查询日期
-            
+            use_cache: 是否使用缓存
+
         Returns:
             StockSelection 对象列表
         """
+        cache_key = f"date:{query_date.isoformat()}"
+
+        if use_cache:
+            cached = self._selection_cache.get(cache_key)
+            if cached is not None:
+                logger.debug(f"缓存命中: {cache_key}")
+                return cached
+
         with self.db.get_session() as session:
             results = session.execute(
                 select(StockSelection)
                 .where(StockSelection.date == query_date)
                 .order_by(desc(StockSelection.change_rate), StockSelection.code)
             ).scalars().all()
-            return list(results)
+            result_list = list(results)
+
+            # 缓存结果10分钟
+            if use_cache and result_list:
+                self._selection_cache.set(cache_key, result_list, ttl=600)
+                logger.debug(f"缓存已设置: {cache_key}")
+
+            return result_list
     
     def get_by_code(self, code: str, days: int = 30) -> List[StockSelection]:
         """
@@ -437,6 +456,11 @@ class SelectionRepository:
             
             session.commit()
             logger.info(f"保存选股数据成功: {query_date}, 新增 {saved_count} 条")
+        
+        # 清除缓存，确保下次查询获取最新数据
+        cache_key = f"date:{query_date.isoformat()}"
+        self._selection_cache.delete(cache_key)
+        logger.debug(f"已清除选股数据缓存: {cache_key}")
         
         return saved_count
     

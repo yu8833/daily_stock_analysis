@@ -120,12 +120,19 @@ export const getTodayIso = (): string => {
 
 export type ValueType = 'text' | 'number' | 'percent' | 'money' | 'price' | 'date' | 'flag';
 
+export interface ColumnGroup {
+  id: string;
+  label: string;
+  icon?: string;
+}
+
 export interface ColumnConfig<T> {
   key: keyof T;
   label: string;
   width: string;
   align: 'left' | 'right' | 'center';
   type: ValueType;
+  group?: string;
   render?: (value: any, row: T) => React.ReactNode;
 }
 
@@ -143,6 +150,11 @@ export const formatCellValue = <T,>(value: any, column: ColumnConfig<T>): string
       return formatNumber(value);
     case 'date':
       return formatDate(value);
+    case 'flag':
+      if (value === '1' || value === 1) return '是';
+      if (value === '0' || value === 0) return '否';
+      if (value === '-' || value === null || value === undefined) return '-';
+      return String(value);
     default:
       return String(value);
   }

@@ -10,6 +10,8 @@ import { getTodayIso } from '../utils/format';
 interface BuyStock {
   code: string;
   name: string;
+  reason: string;
+  signal_count: number;
   new_price: number | null;
   change_rate: number | null;
   volume_ratio: number | null;
@@ -34,38 +36,135 @@ interface BuyStock {
   ma120: number | null;
   ma250: number | null;
   macd_golden_fork: string | null;
+  macd_golden_forkz: string | null;
+  macd_golden_forky: string | null;
   kdj_golden_fork: string | null;
+  kdj_golden_forkz: string | null;
+  kdj_golden_forky: string | null;
   break_through: string | null;
+  breakup_ma_5days: string | null;
+  breakup_ma_10days: string | null;
+  breakup_ma_20days: string | null;
+  breakup_ma_60days: string | null;
   long_avg_array: string | null;
   short_avg_array: string | null;
   low_funds_inflow: string | null;
   high_funds_outflow: string | null;
-  reason?: string;
+  upper_large_volume: string | null;
+  one_dayang_line: string | null;
+  two_dayang_lines: string | null;
+  rise_sun: string | null;
+  power_fulgun: string | null;
+  restore_justice: string | null;
+  heaven_rule: string | null;
+  upside_volume: string | null;
+  morning_star: string | null;
+  first_dawn: string | null;
+  reversing_hammer: string | null;
+  pregnant: string | null;
+  narrow_finish: string | null;
+  upper_8days: string | null;
+  upper_9days: string | null;
+  upper_4days: string | null;
+  volume_up: string | null;
+  parking_apron: string | null;
+  backtrace_ma250: string | null;
+  breakthrough_platform: string | null;
+  low_backtrace_increase: string | null;
+  turtle_trade: string | null;
+  high_tight_flag: string | null;
+  low_atr_growth: string | null;
+  now_newhigh: string | null;
+  high_recent_3days: string | null;
+  high_recent_5days: string | null;
+  high_recent_10days: string | null;
+  high_recent_20days: string | null;
+  high_recent_30days: string | null;
+  win_market_3days: string | null;
+  win_market_5days: string | null;
+  win_market_10days: string | null;
+  win_market_20days: string | null;
+  win_market_30days: string | null;
 }
 
 type SortField = keyof BuyStock;
 type SortOrder = 'asc' | 'desc';
 
+const COLUMN_GROUPS = [
+  { id: 'basic', label: '基本信息' },
+  { id: 'kline', label: 'K线形态' },
+  { id: 'technical', label: '技术指标' },
+  { id: 'performance', label: '近期表现' },
+  { id: 'strategy', label: '策略信号' },
+  { id: 'fund_flow', label: '资金流向' },
+  { id: 'quotation', label: '行情数据' },
+];
+
 const COLUMN_CONFIG: ColumnConfig<BuyStock>[] = [
-  { key: 'code', label: '代码', width: 'w-20', align: 'left', type: 'text' },
-  { key: 'name', label: '名称', width: 'w-24', align: 'left', type: 'text' },
-  { key: 'reason', label: '买入理由', width: 'w-64', align: 'left', type: 'text' },
-  { key: 'macd_golden_fork', label: 'MACD金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'kdj_golden_fork', label: 'KDJ金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'break_through', label: '放量突破', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'long_avg_array', label: '均线多头', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'low_funds_inflow', label: '低位资金净流入', width: 'w-28', align: 'center', type: 'flag' },
-  { key: 'industry', label: '行业', width: 'w-28', align: 'left', type: 'text' },
-  { key: 'area', label: '地区', width: 'w-20', align: 'left', type: 'text' },
-  { key: 'new_price', label: '最新价', width: 'w-24', align: 'right', type: 'price' },
-  { key: 'change_rate', label: '涨跌幅', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'volume_ratio', label: '量比', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'volume', label: '成交量', width: 'w-28', align: 'right', type: 'number' },
-  { key: 'deal_amount', label: '成交额', width: 'w-28', align: 'right', type: 'money' },
-  { key: 'turnoverrate', label: '换手率', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'pe', label: 'PE', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'pbnewmrq', label: 'PB', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'total_market_cap', label: '总市值', width: 'w-28', align: 'right', type: 'money' },
+  { key: 'code', label: '代码', width: 'w-16', align: 'left', type: 'text', group: 'basic' },
+  { key: 'name', label: '名称', width: 'w-16', align: 'left', type: 'text', group: 'basic' },
+  { key: 'reason', label: '买入理由', width: 'w-40', align: 'left', type: 'text', group: 'basic' },
+  { key: 'signal_count', label: '信号数', width: 'w-16', align: 'center', type: 'number', group: 'basic' },
+
+  { key: 'one_dayang_line', label: '大阳线', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'two_dayang_lines', label: '两连阳', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'upper_8days', label: '八连阳', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'upper_9days', label: '九连阳', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'upper_4days', label: '四串阳', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'rise_sun', label: '旭日东升', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'power_fulgun', label: '强势多方炮', width: 'w-20', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'restore_justice', label: '拨云见日', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'heaven_rule', label: '天量法则', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'upside_volume', label: '放量上攻', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'morning_star', label: '早晨之星', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'first_dawn', label: '曙光初现', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'reversing_hammer', label: '倒转锤头', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'pregnant', label: '身怀六甲', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'narrow_finish', label: '窄幅整理', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+
+  { key: 'macd_golden_fork', label: 'MACD金叉', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'macd_golden_forkz', label: 'MACD周金叉', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'macd_golden_forky', label: 'MACD月金叉', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'kdj_golden_fork', label: 'KDJ金叉', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'kdj_golden_forkz', label: 'KDJ周金叉', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'kdj_golden_forky', label: 'KDJ月金叉', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_5days', label: '站5日线', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_10days', label: '站10日线', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_20days', label: '站20日线', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_60days', label: '站60日线', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'long_avg_array', label: '均线多头', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+
+  { key: 'win_market_3days', label: '跑赢大盘3日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'win_market_5days', label: '跑赢大盘5日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'win_market_10days', label: '跑赢大盘10日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'now_newhigh', label: '今日历史新高', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'high_recent_3days', label: '历史新高3日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'high_recent_5days', label: '历史新高5日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'high_recent_10days', label: '历史新高10日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+
+  { key: 'break_through', label: '放量突破', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'volume_up', label: '放量上涨', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'parking_apron', label: '停机坪', width: 'w-16', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'backtrace_ma250', label: '回踩年线', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'breakthrough_platform', label: '突破平台', width: 'w-20', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'low_backtrace_increase', label: '无大幅回撤', width: 'w-24', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'turtle_trade', label: '海龟法则', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'high_tight_flag', label: '宽窄旗形', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'low_atr_growth', label: '低ATR成长', width: 'w-20', align: 'center', type: 'flag', group: 'strategy' },
+
+  { key: 'low_funds_inflow', label: '低位资金净流入', width: 'w-24', align: 'center', type: 'flag', group: 'fund_flow' },
+
+  { key: 'industry', label: '行业', width: 'w-28', align: 'left', type: 'text', group: 'quotation' },
+  { key: 'area', label: '地区', width: 'w-20', align: 'left', type: 'text', group: 'quotation' },
+  { key: 'new_price', label: '最新价', width: 'w-24', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'change_rate', label: '涨跌幅', width: 'w-24', align: 'right', type: 'percent', group: 'quotation' },
+  { key: 'volume_ratio', label: '量比', width: 'w-20', align: 'right', type: 'number', group: 'quotation' },
+  { key: 'volume', label: '成交量', width: 'w-28', align: 'right', type: 'number', group: 'quotation' },
+  { key: 'deal_amount', label: '成交额', width: 'w-28', align: 'right', type: 'money', group: 'quotation' },
+  { key: 'turnoverrate', label: '换手率', width: 'w-24', align: 'right', type: 'percent', group: 'quotation' },
+  { key: 'pe', label: 'PE', width: 'w-16', align: 'right', type: 'number', group: 'quotation' },
+  { key: 'pbnewmrq', label: 'PB', width: 'w-16', align: 'right', type: 'number', group: 'quotation' },
+  { key: 'total_market_cap', label: '总市值', width: 'w-28', align: 'right', type: 'money', group: 'quotation' },
 ];
 
 const BuyPage: React.FC = () => {
@@ -102,6 +201,7 @@ const BuyPage: React.FC = () => {
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
   
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
+  const [flagFilters, setFlagFilters] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -109,6 +209,15 @@ const BuyPage: React.FC = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchKeyword]);
+
+  const handleFlagFilterChange = (key: string, value: string) => {
+    setFlagFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+    setCurrentPage(1);
+    setSelectedCodes(new Set());
+  };
 
   const fetchBuyData = async () => {
     setIsLoading(true);
@@ -124,6 +233,12 @@ const BuyPage: React.FC = () => {
       
       if (debouncedKeyword.trim()) {
         params.append('keyword', debouncedKeyword.trim());
+      }
+      
+      for (const [key, value] of Object.entries(flagFilters)) {
+        if (value) {
+          params.append(key, value);
+        }
       }
       
       const url = `/api/v1/buy/?${params.toString()}`;
@@ -359,7 +474,9 @@ const BuyPage: React.FC = () => {
               onSort={handleColumnSort}
               linkColumns={['code', 'name']}
               rowKey={(row) => row.code}
-              stickyColumns={['code', 'name']}
+              groups={COLUMN_GROUPS}
+              flagFilters={flagFilters}
+              onFlagFilterChange={handleFlagFilterChange}
             />
           </Card>
 

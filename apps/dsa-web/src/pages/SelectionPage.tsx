@@ -5,7 +5,7 @@ import { Download, X, BarChart3 } from 'lucide-react';
 import { DataTable } from '../components/common/DataTable';
 import { TablePagination } from '../components/common/TablePagination';
 import type { ColumnConfig } from '../utils/format';
-import { getTodayIso } from '../utils/format';
+import { getTodayIso, getEastMoneyUrl } from '../utils/format';
 
 interface SelectionStock {
   code: string;
@@ -210,211 +210,286 @@ interface SelectionStock {
   is_bps_break: string | null;
   now_newhigh: string | null;
   now_newlow: string | null;
+  // 自定义策略信号
+  volume_up: string | null;
+  parking_apron: string | null;
+  backtrace_ma250: string | null;
+  breakthrough_platform: string | null;
+  low_backtrace_increase: string | null;
+  turtle_trade: string | null;
+  high_tight_flag: string | null;
+  climax_limitdown: string | null;
+  low_atr_growth: string | null;
 }
 
 type SortField = keyof SelectionStock;
 type SortOrder = 'asc' | 'desc';
 
+const COLUMN_GROUPS = [
+  { id: 'basic', label: '基本信息' },
+  { id: 'kline', label: 'K线形态' },
+  { id: 'technical', label: '技术指标' },
+  { id: 'performance', label: '近期表现' },
+  { id: 'strategy', label: '策略信号' },
+  { id: 'events', label: '事件驱动' },
+  { id: 'fund_flow', label: '资金流向' },
+  { id: 'quotation', label: '行情数据' },
+  { id: 'valuation', label: '估值指标' },
+  { id: 'market_cap', label: '市值' },
+  { id: 'profitability', label: '盈利能力' },
+  { id: 'growth', label: '成长性' },
+  { id: 'per_share', label: '每股数据' },
+  { id: 'profit', label: '利润' },
+  { id: 'structure', label: '财务结构' },
+  { id: 'shares', label: '股本' },
+  { id: 'shareholders', label: '股东信息' },
+  { id: 'changes', label: '变动追踪' },
+  { id: 'institutions', label: '机构持仓' },
+  { id: 'dividend', label: '分红' },
+  { id: 'goodwill', label: '商誉' },
+  { id: 'market', label: '市场归属' },
+  { id: 'special', label: '特殊状态' },
+  { id: 'popularity', label: '人气排名' },
+  { id: 'change_stats', label: '涨跌幅统计' },
+  { id: 'listing', label: '上市数据' },
+  { id: 'hksc', label: '沪深股通' },
+];
+
 const COLUMN_CONFIG: ColumnConfig<SelectionStock>[] = [
-  { key: 'code', label: '代码', width: 'w-16', align: 'left', type: 'text' },
-  { key: 'name', label: '名称', width: 'w-20', align: 'left', type: 'text' },
-  { key: 'is_hs300', label: '沪深300', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'is_sz50', label: '上证50', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'is_zz500', label: '中证500', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'is_zz1000', label: '中证1000', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'is_cy50', label: '创业板50', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'macd_golden_fork', label: 'MACD金叉', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'macd_golden_forkz', label: 'MACD周金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'macd_golden_forky', label: 'MACD月金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'kdj_golden_fork', label: 'KDJ金叉', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'kdj_golden_forkz', label: 'KDJ周金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'kdj_golden_forky', label: 'KDJ月金叉', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'break_through', label: '放量突破', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'low_funds_inflow', label: '低位资金净流入', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'high_funds_outflow', label: '高位资金净流出', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_5days', label: '站5日线', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_10days', label: '站10日线', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_20days', label: '站20日线', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_30days', label: '站30日线', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'breakup_ma_60days', label: '站60日线', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'long_avg_array', label: '均线多头', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'short_avg_array', label: '均线空头', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'upper_large_volume', label: '连涨放量', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'down_narrow_volume', label: '下跌无量', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'one_dayang_line', label: '大阳线', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'two_dayang_lines', label: '两连阳', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'rise_sun', label: '旭日东升', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'power_fulgun', label: '强势多方炮', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'restore_justice', label: '拨云见日', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'down_7days', label: '七连阴', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'upper_8days', label: '八连阳', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'upper_9days', label: '九连阳', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'upper_4days', label: '四串阳', width: 'w-16', align: 'center', type: 'flag' },
-  { key: 'heaven_rule', label: '天量法则', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'upside_volume', label: '放量上攻', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'bearish_engulfing', label: '穿头破脚', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'reversing_hammer', label: '倒转锤头', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'shooting_star', label: '射击之星', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'evening_star', label: '黄昏之星', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'first_dawn', label: '曙光初现', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'pregnant', label: '身怀六甲', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'black_cloud_tops', label: '乌云盖顶', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'morning_star', label: '早晨之星', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'narrow_finish', label: '窄幅整理', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'limited_lift_f6m', label: '限售解禁未来半年', width: 'w-28', align: 'center', type: 'flag' },
-  { key: 'limited_lift_f1y', label: '限售解禁未来一年', width: 'w-28', align: 'center', type: 'flag' },
-  { key: 'limited_lift_6m', label: '限售解禁近半年', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'limited_lift_1y', label: '限售解禁近一年', width: 'w-24', align: 'center', type: 'flag' },
-  { key: 'directional_seo_1m', label: '定增近1月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'directional_seo_3m', label: '定增近3月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'directional_seo_6m', label: '定增近6月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'directional_seo_1y', label: '定增近1年', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'recapitalize_1m', label: '重组近1月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'recapitalize_3m', label: '重组近3月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'recapitalize_6m', label: '重组近6月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'recapitalize_1y', label: '重组近1年', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'equity_pledge_1m', label: '质押近1月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'equity_pledge_3m', label: '质押近3月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'equity_pledge_6m', label: '质押近6月', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'equity_pledge_1y', label: '质押近1年', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'high_recent_3days', label: '近期创历史新高近3日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'high_recent_5days', label: '近期创历史新高近5日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'high_recent_10days', label: '近期创历史新高近10日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'high_recent_20days', label: '近期创历史新高近20日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'high_recent_30days', label: '近期创历史新高近30日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_3days', label: '近期创历史新低近3日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_5days', label: '近期创历史新低近5日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_10days', label: '近期创历史新低近10日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_20days', label: '近期创历史新低近20日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'low_recent_30days', label: '近期创历史新低近30日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_3days', label: '近期跑赢大盘近3日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_5days', label: '近期跑赢大盘近5日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_10days', label: '近期跑赢大盘近10日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_20days', label: '近期跑赢大盘近20日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'win_market_30days', label: '近期跑赢大盘近30日', width: 'w-32', align: 'center', type: 'flag' },
-  { key: 'industry', label: '行业', width: 'w-24', align: 'left', type: 'text' },
-  { key: 'area', label: '地区', width: 'w-16', align: 'left', type: 'text' },
-  { key: 'concept', label: '概念', width: 'w-32', align: 'left', type: 'text' },
-  { key: 'new_price', label: '最新价', width: 'w-20', align: 'right', type: 'price' },
-  { key: 'change_rate', label: '涨跌幅', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'volume_ratio', label: '量比', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'high_price', label: '最高价', width: 'w-20', align: 'right', type: 'price' },
-  { key: 'low_price', label: '最低价', width: 'w-20', align: 'right', type: 'price' },
-  { key: 'pre_close_price', label: '昨收', width: 'w-16', align: 'right', type: 'price' },
-  { key: 'volume', label: '成交量', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'deal_amount', label: '成交额', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'turnoverrate', label: '换手率', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'amplitude', label: '振幅', width: 'w-16', align: 'right', type: 'percent' },
-  { key: 'pe9', label: 'PE(TTM)', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'pbnewmrq', label: 'PB(MRQ)', width: 'w-18', align: 'right', type: 'number' },
-  { key: 'pettmdeducted', label: 'PE扣非', width: 'w-18', align: 'right', type: 'number' },
-  { key: 'ps9', label: 'PS(TTM)', width: 'w-18', align: 'right', type: 'number' },
-  { key: 'pcfjyxjl9', label: 'PCF(TTM)', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'dtsyl', label: '动态PE', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'enterprise_value_multiple', label: '企业价值倍数', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'total_market_cap', label: '总市值', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'free_cap', label: '流通市值', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'basic_eps', label: 'EPS', width: 'w-14', align: 'right', type: 'number' },
-  { key: 'bvps', label: 'BVPS', width: 'w-14', align: 'right', type: 'number' },
-  { key: 'per_netcash_operate', label: '每股经营现金流', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'per_fcfe', label: '每股自由现金流', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'per_capital_reserve', label: '每股资本公积', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'per_unassign_profit', label: '每股未分配利润', width: 'w-28', align: 'right', type: 'number' },
-  { key: 'per_surplus_reserve', label: '每股盈余公积', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'per_retained_earning', label: '每股留存收益', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'parent_netprofit', label: '归属净利润', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'deduct_netprofit', label: '扣非净利润', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'total_operate_income', label: '营业总收入', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'roe_weight', label: 'ROE(加权)', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'jroa', label: 'ROA', width: 'w-14', align: 'right', type: 'percent' },
-  { key: 'roic', label: 'ROIC', width: 'w-16', align: 'right', type: 'percent' },
-  { key: 'zxgxl', label: '最新股息率', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'sale_gpr', label: '毛利率', width: 'w-18', align: 'right', type: 'percent' },
-  { key: 'sale_npr', label: '净利率', width: 'w-18', align: 'right', type: 'percent' },
-  { key: 'netprofit_yoy_ratio', label: '净利润增长', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'deduct_netprofit_growthrate', label: '扣非净利润增长', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'toi_yoy_ratio', label: '营收增长', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'netprofit_growthrate_3y', label: '净利3年复合', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'income_growthrate_3y', label: '营收3年复合', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'predict_netprofit_ratio', label: '预测净利润增长', width: 'w-28', align: 'right', type: 'percent' },
-  { key: 'predict_income_ratio', label: '预测营收增长', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'basiceps_yoy_ratio', label: 'EPS增长', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'total_profit_growthrate', label: '利润总额增长', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'operate_profit_growthrate', label: '营业利润增长', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'debt_asset_ratio', label: '资产负债率', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'equity_ratio', label: '产权比率', width: 'w-18', align: 'right', type: 'percent' },
-  { key: 'equity_multiplier', label: '权益乘数', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'current_ratio', label: '流动比率', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'speed_ratio', label: '速动比率', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'total_shares', label: '总股本', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'free_shares', label: '流通股本', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'holder_newest', label: '股东户数', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'holder_ratio', label: '股东户数增长', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'hold_amount', label: '户均持股金额', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'avg_hold_num', label: '户均持股数量', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'holdnum_growthrate_3q', label: '户均持股数季度增长', width: 'w-28', align: 'right', type: 'percent' },
-  { key: 'holdnum_growthrate_hy', label: '户均持股数半年增长', width: 'w-28', align: 'right', type: 'percent' },
-  { key: 'hold_ratio_count', label: '十大股东持股', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'free_hold_ratio', label: '十大流通股东', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'pledge_ratio', label: '质押比例', width: 'w-18', align: 'right', type: 'percent' },
-  { key: 'goodwill_scale', label: '商誉规模', width: 'w-20', align: 'right', type: 'money' },
-  { key: 'goodwill_assets_ratro', label: '商誉占比', width: 'w-18', align: 'right', type: 'percent' },
-  { key: 'par_dividend_pretax', label: '每股股利税前', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'par_it_equity', label: '每股转增股本', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'holder_change_3m', label: '近3月股东增减', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'executive_change_3m', label: '近3月高管增减', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'org_survey_3m', label: '近3月机构调研', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'org_rating', label: '机构评级', width: 'w-18', align: 'left', type: 'text' },
-  { key: 'allcorp_num', label: '机构家数合计', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'allcorp_fund_num', label: '基金家数', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'allcorp_qs_num', label: '券商家数', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'allcorp_qfii_num', label: 'QFII家数', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'allcorp_bx_num', label: '保险家数', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'allcorp_sb_num', label: '社保持股家数', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'allcorp_xt_num', label: '信托家数', width: 'w-20', align: 'right', type: 'number' },
-  { key: 'allcorp_ratio', label: '机构比例合计', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'allcorp_fund_ratio', label: '基金比例', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'allcorp_qs_ratio', label: '券商比例', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'allcorp_qfii_ratio', label: 'QFII比例', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'allcorp_bx_ratio', label: '保险比例', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'allcorp_sb_ratio', label: '社保比例', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'allcorp_xt_ratio', label: '信托比例', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'popularity_rank', label: '人气排名', width: 'w-18', align: 'right', type: 'number' },
-  { key: 'rank_change', label: '排名变化', width: 'w-18', align: 'right', type: 'number' },
-  { key: 'upp_days', label: '人气排名连涨', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'down_days', label: '人气排名连跌', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'new_high', label: '人气排名创新高', width: 'w-28', align: 'right', type: 'number' },
-  { key: 'new_down', label: '人气排名创新低', width: 'w-28', align: 'right', type: 'number' },
-  { key: 'newfans_ratio', label: '新晋粉丝占比', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'bigfans_ratio', label: '铁杆粉丝占比', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'concern_rank_7days', label: '7日关注排名', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'browse_rank', label: '今日浏览排名', width: 'w-24', align: 'right', type: 'number' },
-  { key: 'net_inflow', label: '当日净流入', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'netinflow_3days', label: '3日主力净流入', width: 'w-28', align: 'right', type: 'money' },
-  { key: 'netinflow_5days', label: '5日主力净流入', width: 'w-28', align: 'right', type: 'money' },
-  { key: 'nowinterst_ratio', label: '当日增仓占比', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'nowinterst_ratio_3d', label: '3日增仓占比', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'nowinterst_ratio_5d', label: '5日增仓占比', width: 'w-24', align: 'right', type: 'percent' },
-  { key: 'ddx', label: '当日DDX', width: 'w-18', align: 'right', type: 'number' },
-  { key: 'ddx_3d', label: '3日DDX', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'ddx_5d', label: '5日DDX', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'ddx_red_10d', label: '10日内DDX飘红天数', width: 'w-32', align: 'right', type: 'number' },
-  { key: 'changerate_3days', label: '3日涨跌幅', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'changerate_5days', label: '5日涨跌幅', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'changerate_10days', label: '10日涨跌幅', width: 'w-20', align: 'right', type: 'percent' },
-  { key: 'changerate_ty', label: '今年以来涨跌幅', width: 'w-28', align: 'right', type: 'percent' },
-  { key: 'upnday', label: '连涨天数', width: 'w-18', align: 'right', type: 'number' },
-  { key: 'downnday', label: '连跌天数', width: 'w-18', align: 'right', type: 'number' },
-  { key: 'listing_yield_year', label: '上市以来年化收益率', width: 'w-32', align: 'right', type: 'percent' },
-  { key: 'listing_volatility_year', label: '上市以来年化波动率', width: 'w-32', align: 'right', type: 'percent' },
-  { key: 'mutual_netbuy_amt', label: '沪深股通净买入', width: 'w-24', align: 'right', type: 'money' },
-  { key: 'hold_ratio', label: '沪深股通持股比例', width: 'w-28', align: 'right', type: 'percent' },
-  { key: 'par_dividend', label: '每股红股', width: 'w-16', align: 'right', type: 'number' },
-  { key: 'predict_type', label: '业绩预告', width: 'w-18', align: 'center', type: 'flag' },
-  { key: 'is_issue_break', label: '破发', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'is_bps_break', label: '破净', width: 'w-14', align: 'center', type: 'flag' },
-  { key: 'now_newhigh', label: '今日历史新高', width: 'w-20', align: 'center', type: 'flag' },
-  { key: 'now_newlow', label: '今日历史新低', width: 'w-20', align: 'center', type: 'flag' },
+  { key: 'code', label: '代码', width: 'w-16', align: 'left', type: 'text', group: 'basic' },
+  { key: 'name', label: '名称', width: 'w-16', align: 'left', type: 'text', group: 'basic' },
+
+  { key: 'predict_type', label: '业绩预告', width: 'w-18', align: 'center', type: 'text', group: 'special' },
+  { key: 'is_issue_break', label: '破发', width: 'w-14', align: 'center', type: 'flag', group: 'special' },
+  { key: 'is_bps_break', label: '破净', width: 'w-14', align: 'center', type: 'flag', group: 'special' },
+  { key: 'now_newhigh', label: '今日历史新高', width: 'w-20', align: 'center', type: 'flag', group: 'special' },
+  { key: 'now_newlow', label: '今日历史新低', width: 'w-20', align: 'center', type: 'flag', group: 'special' },
+
+  { key: 'win_market_3days', label: '跑赢大盘3日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'win_market_5days', label: '跑赢大盘5日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'win_market_10days', label: '跑赢大盘10日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'win_market_20days', label: '跑赢大盘20日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'win_market_30days', label: '跑赢大盘30日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'high_recent_3days', label: '历史新高3日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'high_recent_5days', label: '历史新高5日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'high_recent_10days', label: '历史新高10日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'high_recent_20days', label: '历史新高20日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'high_recent_30days', label: '历史新高30日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'low_recent_3days', label: '历史新低3日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'low_recent_5days', label: '历史新低5日', width: 'w-20', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'low_recent_10days', label: '历史新低10日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'low_recent_20days', label: '历史新低20日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+  { key: 'low_recent_30days', label: '历史新低30日', width: 'w-22', align: 'center', type: 'flag', group: 'performance' },
+
+  { key: 'one_dayang_line', label: '大阳线', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'two_dayang_lines', label: '两连阳', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'upper_8days', label: '八连阳', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'upper_9days', label: '九连阳', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'upper_4days', label: '四串阳', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'down_7days', label: '七连阴', width: 'w-16', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'rise_sun', label: '旭日东升', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'power_fulgun', label: '强势多方炮', width: 'w-20', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'restore_justice', label: '拨云见日', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'heaven_rule', label: '天量法则', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'upside_volume', label: '放量上攻', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'bearish_engulfing', label: '穿头破脚', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'reversing_hammer', label: '倒转锤头', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'shooting_star', label: '射击之星', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'evening_star', label: '黄昏之星', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'first_dawn', label: '曙光初现', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'pregnant', label: '身怀六甲', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'black_cloud_tops', label: '乌云盖顶', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'morning_star', label: '早晨之星', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+  { key: 'narrow_finish', label: '窄幅整理', width: 'w-18', align: 'center', type: 'flag', group: 'kline' },
+
+  { key: 'macd_golden_fork', label: 'MACD金叉', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'macd_golden_forkz', label: 'MACD周金叉', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'macd_golden_forky', label: 'MACD月金叉', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'kdj_golden_fork', label: 'KDJ金叉', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'kdj_golden_forkz', label: 'KDJ周金叉', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'kdj_golden_forky', label: 'KDJ月金叉', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_5days', label: '站5日线', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_10days', label: '站10日线', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_20days', label: '站20日线', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_30days', label: '站30日线', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'breakup_ma_60days', label: '站60日线', width: 'w-20', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'long_avg_array', label: '均线多头', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+  { key: 'short_avg_array', label: '均线空头', width: 'w-18', align: 'center', type: 'flag', group: 'technical' },
+
+  { key: 'break_through', label: '放量突破', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'low_funds_inflow', label: '低位资金净流入', width: 'w-24', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'high_funds_outflow', label: '高位资金净流出', width: 'w-24', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'upper_large_volume', label: '连涨放量', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'down_narrow_volume', label: '下跌无量', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'volume_up', label: '放量上涨', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'parking_apron', label: '停机坪', width: 'w-16', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'backtrace_ma250', label: '回踩年线', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'breakthrough_platform', label: '突破平台', width: 'w-20', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'low_backtrace_increase', label: '无大幅回撤', width: 'w-24', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'turtle_trade', label: '海龟法则', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'high_tight_flag', label: '宽窄旗形', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'climax_limitdown', label: '放量跌停', width: 'w-18', align: 'center', type: 'flag', group: 'strategy' },
+  { key: 'low_atr_growth', label: '低ATR成长', width: 'w-20', align: 'center', type: 'flag', group: 'strategy' },
+
+  { key: 'limited_lift_f6m', label: '解禁未来半年', width: 'w-22', align: 'center', type: 'flag', group: 'events' },
+  { key: 'limited_lift_f1y', label: '解禁未来一年', width: 'w-22', align: 'center', type: 'flag', group: 'events' },
+  { key: 'limited_lift_6m', label: '解禁近半年', width: 'w-20', align: 'center', type: 'flag', group: 'events' },
+  { key: 'limited_lift_1y', label: '解禁近一年', width: 'w-20', align: 'center', type: 'flag', group: 'events' },
+  { key: 'directional_seo_1m', label: '定增近1月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'directional_seo_3m', label: '定增近3月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'directional_seo_6m', label: '定增近6月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'directional_seo_1y', label: '定增近1年', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'recapitalize_1m', label: '重组近1月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'recapitalize_3m', label: '重组近3月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'recapitalize_6m', label: '重组近6月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'recapitalize_1y', label: '重组近1年', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'equity_pledge_1m', label: '质押近1月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'equity_pledge_3m', label: '质押近3月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'equity_pledge_6m', label: '质押近6月', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+  { key: 'equity_pledge_1y', label: '质押近1年', width: 'w-18', align: 'center', type: 'flag', group: 'events' },
+
+  { key: 'is_hs300', label: '沪深300', width: 'w-16', align: 'center', type: 'flag', group: 'market' },
+  { key: 'is_sz50', label: '上证50', width: 'w-14', align: 'center', type: 'flag', group: 'market' },
+  { key: 'is_zz500', label: '中证500', width: 'w-18', align: 'center', type: 'flag', group: 'market' },
+  { key: 'is_zz1000', label: '中证1000', width: 'w-20', align: 'center', type: 'flag', group: 'market' },
+  { key: 'is_cy50', label: '创业板50', width: 'w-18', align: 'center', type: 'flag', group: 'market' },
+  { key: 'industry', label: '行业', width: 'w-24', align: 'left', type: 'text', group: 'market' },
+  { key: 'area', label: '地区', width: 'w-16', align: 'left', type: 'text', group: 'market' },
+  { key: 'concept', label: '概念', width: 'w-32', align: 'left', type: 'text', group: 'market' },
+
+  { key: 'new_price', label: '最新价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'change_rate', label: '涨跌幅', width: 'w-20', align: 'right', type: 'percent', group: 'quotation' },
+  { key: 'volume_ratio', label: '量比', width: 'w-16', align: 'right', type: 'number', group: 'quotation' },
+  { key: 'high_price', label: '最高价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'low_price', label: '最低价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'pre_close_price', label: '昨收', width: 'w-16', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'volume', label: '成交量', width: 'w-24', align: 'right', type: 'number', group: 'quotation' },
+  { key: 'deal_amount', label: '成交额', width: 'w-24', align: 'right', type: 'money', group: 'quotation' },
+  { key: 'turnoverrate', label: '换手率', width: 'w-20', align: 'right', type: 'percent', group: 'quotation' },
+  { key: 'amplitude', label: '振幅', width: 'w-16', align: 'right', type: 'percent', group: 'quotation' },
+
+  { key: 'pe9', label: 'PE(TTM)', width: 'w-16', align: 'right', type: 'number', group: 'valuation' },
+  { key: 'pbnewmrq', label: 'PB(MRQ)', width: 'w-18', align: 'right', type: 'number', group: 'valuation' },
+  { key: 'pettmdeducted', label: 'PE扣非', width: 'w-18', align: 'right', type: 'number', group: 'valuation' },
+  { key: 'ps9', label: 'PS(TTM)', width: 'w-18', align: 'right', type: 'number', group: 'valuation' },
+  { key: 'pcfjyxjl9', label: 'PCF(TTM)', width: 'w-20', align: 'right', type: 'number', group: 'valuation' },
+  { key: 'dtsyl', label: '动态PE', width: 'w-16', align: 'right', type: 'number', group: 'valuation' },
+  { key: 'enterprise_value_multiple', label: '企业价值倍数', width: 'w-24', align: 'right', type: 'number', group: 'valuation' },
+
+  { key: 'total_market_cap', label: '总市值', width: 'w-24', align: 'right', type: 'money', group: 'market_cap' },
+  { key: 'free_cap', label: '流通市值', width: 'w-24', align: 'right', type: 'money', group: 'market_cap' },
+
+  { key: 'basic_eps', label: 'EPS', width: 'w-14', align: 'right', type: 'number', group: 'per_share' },
+  { key: 'bvps', label: 'BVPS', width: 'w-14', align: 'right', type: 'number', group: 'per_share' },
+  { key: 'per_netcash_operate', label: '每股经营现金流', width: 'w-24', align: 'right', type: 'number', group: 'per_share' },
+  { key: 'per_fcfe', label: '每股自由现金流', width: 'w-24', align: 'right', type: 'number', group: 'per_share' },
+  { key: 'per_capital_reserve', label: '每股资本公积', width: 'w-24', align: 'right', type: 'number', group: 'per_share' },
+  { key: 'per_unassign_profit', label: '每股未分配利润', width: 'w-28', align: 'right', type: 'number', group: 'per_share' },
+  { key: 'per_surplus_reserve', label: '每股盈余公积', width: 'w-24', align: 'right', type: 'number', group: 'per_share' },
+  { key: 'per_retained_earning', label: '每股留存收益', width: 'w-24', align: 'right', type: 'number', group: 'per_share' },
+
+  { key: 'parent_netprofit', label: '归属净利润', width: 'w-24', align: 'right', type: 'money', group: 'profit' },
+  { key: 'deduct_netprofit', label: '扣非净利润', width: 'w-24', align: 'right', type: 'money', group: 'profit' },
+  { key: 'total_operate_income', label: '营业总收入', width: 'w-24', align: 'right', type: 'money', group: 'profit' },
+
+  { key: 'roe_weight', label: 'ROE(加权)', width: 'w-20', align: 'right', type: 'percent', group: 'profitability' },
+  { key: 'jroa', label: 'ROA', width: 'w-14', align: 'right', type: 'percent', group: 'profitability' },
+  { key: 'roic', label: 'ROIC', width: 'w-16', align: 'right', type: 'percent', group: 'profitability' },
+  { key: 'zxgxl', label: '最新股息率', width: 'w-20', align: 'right', type: 'percent', group: 'profitability' },
+  { key: 'sale_gpr', label: '毛利率', width: 'w-18', align: 'right', type: 'percent', group: 'profitability' },
+  { key: 'sale_npr', label: '净利率', width: 'w-18', align: 'right', type: 'percent', group: 'profitability' },
+
+  { key: 'netprofit_yoy_ratio', label: '净利润增长', width: 'w-24', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'deduct_netprofit_growthrate', label: '扣非净利润增长', width: 'w-24', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'toi_yoy_ratio', label: '营收增长', width: 'w-20', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'netprofit_growthrate_3y', label: '净利3年复合', width: 'w-24', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'income_growthrate_3y', label: '营收3年复合', width: 'w-24', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'predict_netprofit_ratio', label: '预测净利润增长', width: 'w-28', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'predict_income_ratio', label: '预测营收增长', width: 'w-24', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'basiceps_yoy_ratio', label: 'EPS增长', width: 'w-20', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'total_profit_growthrate', label: '利润总额增长', width: 'w-24', align: 'right', type: 'percent', group: 'growth' },
+  { key: 'operate_profit_growthrate', label: '营业利润增长', width: 'w-24', align: 'right', type: 'percent', group: 'growth' },
+
+  { key: 'debt_asset_ratio', label: '资产负债率', width: 'w-20', align: 'right', type: 'percent', group: 'structure' },
+  { key: 'equity_ratio', label: '产权比率', width: 'w-18', align: 'right', type: 'percent', group: 'structure' },
+  { key: 'equity_multiplier', label: '权益乘数', width: 'w-20', align: 'right', type: 'number', group: 'structure' },
+  { key: 'current_ratio', label: '流动比率', width: 'w-20', align: 'right', type: 'number', group: 'structure' },
+  { key: 'speed_ratio', label: '速动比率', width: 'w-20', align: 'right', type: 'number', group: 'structure' },
+
+  { key: 'total_shares', label: '总股本', width: 'w-20', align: 'right', type: 'number', group: 'shares' },
+  { key: 'free_shares', label: '流通股本', width: 'w-20', align: 'right', type: 'number', group: 'shares' },
+
+  { key: 'holder_newest', label: '股东户数', width: 'w-20', align: 'right', type: 'number', group: 'shareholders' },
+  { key: 'holder_ratio', label: '股东户数增长', width: 'w-24', align: 'right', type: 'percent', group: 'shareholders' },
+  { key: 'hold_amount', label: '户均持股金额', width: 'w-24', align: 'right', type: 'money', group: 'shareholders' },
+  { key: 'avg_hold_num', label: '户均持股数量', width: 'w-24', align: 'right', type: 'number', group: 'shareholders' },
+  { key: 'holdnum_growthrate_3q', label: '户均持股数季度增长', width: 'w-28', align: 'right', type: 'percent', group: 'shareholders' },
+  { key: 'holdnum_growthrate_hy', label: '户均持股数半年增长', width: 'w-28', align: 'right', type: 'percent', group: 'shareholders' },
+  { key: 'hold_ratio_count', label: '十大股东持股', width: 'w-24', align: 'right', type: 'percent', group: 'shareholders' },
+  { key: 'free_hold_ratio', label: '十大流通股东', width: 'w-24', align: 'right', type: 'percent', group: 'shareholders' },
+  { key: 'pledge_ratio', label: '质押比例', width: 'w-18', align: 'right', type: 'percent', group: 'shareholders' },
+
+  { key: 'goodwill_scale', label: '商誉规模', width: 'w-20', align: 'right', type: 'money', group: 'goodwill' },
+  { key: 'goodwill_assets_ratro', label: '商誉占比', width: 'w-18', align: 'right', type: 'percent', group: 'goodwill' },
+
+  { key: 'par_dividend_pretax', label: '每股股利税前', width: 'w-24', align: 'right', type: 'number', group: 'dividend' },
+  { key: 'par_it_equity', label: '每股转增股本', width: 'w-24', align: 'right', type: 'number', group: 'dividend' },
+  { key: 'par_dividend', label: '每股红股', width: 'w-16', align: 'right', type: 'number', group: 'dividend' },
+
+  { key: 'holder_change_3m', label: '近3月股东增减', width: 'w-24', align: 'right', type: 'percent', group: 'changes' },
+  { key: 'executive_change_3m', label: '近3月高管增减', width: 'w-24', align: 'right', type: 'percent', group: 'changes' },
+  { key: 'org_survey_3m', label: '近3月机构调研', width: 'w-24', align: 'right', type: 'number', group: 'changes' },
+
+  { key: 'org_rating', label: '机构评级', width: 'w-18', align: 'left', type: 'text', group: 'institutions' },
+  { key: 'allcorp_num', label: '机构家数合计', width: 'w-24', align: 'right', type: 'number', group: 'institutions' },
+  { key: 'allcorp_fund_num', label: '基金家数', width: 'w-20', align: 'right', type: 'number', group: 'institutions' },
+  { key: 'allcorp_qs_num', label: '券商家数', width: 'w-20', align: 'right', type: 'number', group: 'institutions' },
+  { key: 'allcorp_qfii_num', label: 'QFII家数', width: 'w-20', align: 'right', type: 'number', group: 'institutions' },
+  { key: 'allcorp_bx_num', label: '保险家数', width: 'w-20', align: 'right', type: 'number', group: 'institutions' },
+  { key: 'allcorp_sb_num', label: '社保持股家数', width: 'w-24', align: 'right', type: 'number', group: 'institutions' },
+  { key: 'allcorp_xt_num', label: '信托家数', width: 'w-20', align: 'right', type: 'number', group: 'institutions' },
+  { key: 'allcorp_ratio', label: '机构比例合计', width: 'w-24', align: 'right', type: 'percent', group: 'institutions' },
+  { key: 'allcorp_fund_ratio', label: '基金比例', width: 'w-20', align: 'right', type: 'percent', group: 'institutions' },
+  { key: 'allcorp_qs_ratio', label: '券商比例', width: 'w-20', align: 'right', type: 'percent', group: 'institutions' },
+  { key: 'allcorp_qfii_ratio', label: 'QFII比例', width: 'w-20', align: 'right', type: 'percent', group: 'institutions' },
+  { key: 'allcorp_bx_ratio', label: '保险比例', width: 'w-20', align: 'right', type: 'percent', group: 'institutions' },
+  { key: 'allcorp_sb_ratio', label: '社保比例', width: 'w-20', align: 'right', type: 'percent', group: 'institutions' },
+  { key: 'allcorp_xt_ratio', label: '信托比例', width: 'w-20', align: 'right', type: 'percent', group: 'institutions' },
+
+  { key: 'popularity_rank', label: '人气排名', width: 'w-18', align: 'right', type: 'number', group: 'popularity' },
+  { key: 'rank_change', label: '排名变化', width: 'w-18', align: 'right', type: 'number', group: 'popularity' },
+  { key: 'upp_days', label: '人气排名连涨', width: 'w-24', align: 'right', type: 'number', group: 'popularity' },
+  { key: 'down_days', label: '人气排名连跌', width: 'w-24', align: 'right', type: 'number', group: 'popularity' },
+  { key: 'new_high', label: '人气排名创新高', width: 'w-28', align: 'right', type: 'number', group: 'popularity' },
+  { key: 'new_down', label: '人气排名创新低', width: 'w-28', align: 'right', type: 'number', group: 'popularity' },
+  { key: 'newfans_ratio', label: '新晋粉丝占比', width: 'w-24', align: 'right', type: 'percent', group: 'popularity' },
+  { key: 'bigfans_ratio', label: '铁杆粉丝占比', width: 'w-24', align: 'right', type: 'percent', group: 'popularity' },
+  { key: 'concern_rank_7days', label: '7日关注排名', width: 'w-24', align: 'right', type: 'number', group: 'popularity' },
+  { key: 'browse_rank', label: '今日浏览排名', width: 'w-24', align: 'right', type: 'number', group: 'popularity' },
+
+  { key: 'net_inflow', label: '当日净流入', width: 'w-24', align: 'right', type: 'money', group: 'fund_flow' },
+  { key: 'netinflow_3days', label: '3日主力净流入', width: 'w-28', align: 'right', type: 'money', group: 'fund_flow' },
+  { key: 'netinflow_5days', label: '5日主力净流入', width: 'w-28', align: 'right', type: 'money', group: 'fund_flow' },
+  { key: 'nowinterst_ratio', label: '当日增仓占比', width: 'w-24', align: 'right', type: 'percent', group: 'fund_flow' },
+  { key: 'nowinterst_ratio_3d', label: '3日增仓占比', width: 'w-24', align: 'right', type: 'percent', group: 'fund_flow' },
+  { key: 'nowinterst_ratio_5d', label: '5日增仓占比', width: 'w-24', align: 'right', type: 'percent', group: 'fund_flow' },
+  { key: 'ddx', label: '当日DDX', width: 'w-18', align: 'right', type: 'number', group: 'fund_flow' },
+  { key: 'ddx_3d', label: '3日DDX', width: 'w-16', align: 'right', type: 'number', group: 'fund_flow' },
+  { key: 'ddx_5d', label: '5日DDX', width: 'w-16', align: 'right', type: 'number', group: 'fund_flow' },
+  { key: 'ddx_red_10d', label: '10日内DDX飘红天数', width: 'w-32', align: 'right', type: 'number', group: 'fund_flow' },
+
+  { key: 'changerate_3days', label: '3日涨跌幅', width: 'w-20', align: 'right', type: 'percent', group: 'change_stats' },
+  { key: 'changerate_5days', label: '5日涨跌幅', width: 'w-20', align: 'right', type: 'percent', group: 'change_stats' },
+  { key: 'changerate_10days', label: '10日涨跌幅', width: 'w-20', align: 'right', type: 'percent', group: 'change_stats' },
+  { key: 'changerate_ty', label: '今年以来涨跌幅', width: 'w-28', align: 'right', type: 'percent', group: 'change_stats' },
+  { key: 'upnday', label: '连涨天数', width: 'w-18', align: 'right', type: 'number', group: 'change_stats' },
+  { key: 'downnday', label: '连跌天数', width: 'w-18', align: 'right', type: 'number', group: 'change_stats' },
+
+  { key: 'listing_yield_year', label: '上市以来年化收益率', width: 'w-32', align: 'right', type: 'percent', group: 'listing' },
+  { key: 'listing_volatility_year', label: '上市以来年化波动率', width: 'w-32', align: 'right', type: 'percent', group: 'listing' },
+
+  { key: 'mutual_netbuy_amt', label: '沪深股通净买入', width: 'w-24', align: 'right', type: 'money', group: 'hksc' },
+  { key: 'hold_ratio', label: '沪深股通持股比例', width: 'w-28', align: 'right', type: 'percent', group: 'hksc' },
 ];
 
 const SelectionPage: React.FC = () => {
@@ -449,6 +524,8 @@ const SelectionPage: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
   
+  const [flagFilters, setFlagFilters] = useState<Record<string, '是' | '否' | '-' | ''>>({});
+  
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -472,6 +549,12 @@ const SelectionPage: React.FC = () => {
       
       if (debouncedKeyword.trim()) {
         params.append('keyword', debouncedKeyword.trim());
+      }
+      
+      for (const [key, value] of Object.entries(flagFilters)) {
+        if (value) {
+          params.append(`filter_${key}`, value);
+        }
       }
       
       const url = `/api/v1/select/?${params.toString()}`;
@@ -501,6 +584,11 @@ const SelectionPage: React.FC = () => {
     void fetchSelectionData();
   }, [currentPage, sortField, sortOrder]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+    void fetchSelectionData();
+  }, [flagFilters]);
+
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -513,12 +601,23 @@ const SelectionPage: React.FC = () => {
   };
 
   const handleColumnSort = (field: string) => {
+    const column = COLUMN_CONFIG.find(col => col.key === field);
+    if (column && column.type === 'flag') {
+      return;
+    }
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field as SortField);
       setSortOrder('desc');
     }
+  };
+
+  const handleFlagFilterChange = (key: string, value: string) => {
+    setFlagFilters(prev => ({
+      ...prev,
+      [key]: value as '是' | '否' | '-' | ''
+    }));
   };
 
   const handleSelectAll = () => {
@@ -580,6 +679,24 @@ const SelectionPage: React.FC = () => {
           } else {
             return '-';
           }
+        },
+      };
+    }
+    if (col.key === 'name') {
+      return {
+        ...col,
+        render: (value: any, row: any) => {
+          const code = row.code;
+          return (
+            <a
+              href={getEastMoneyUrl(String(code))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors duration-200 hover:underline"
+            >
+              <span className="font-medium">{value}</span>
+            </a>
+          );
         },
       };
     }
@@ -690,6 +807,7 @@ const SelectionPage: React.FC = () => {
         <Card>
           <DataTable
             columns={customColumns}
+            groups={COLUMN_GROUPS}
             data={stockList}
             loading={isLoading}
             emptyText="暂无数据"
@@ -702,8 +820,9 @@ const SelectionPage: React.FC = () => {
             sortOrder={sortOrder}
             onSort={handleColumnSort}
             linkColumns={['code', 'name']}
+            flagFilters={flagFilters}
+            onFlagFilterChange={handleFlagFilterChange}
             rowKey={(row) => row.code}
-            stickyColumns={['code', 'name']}
           />
         </Card>
       )}

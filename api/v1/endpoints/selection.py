@@ -158,11 +158,17 @@ def get_selection_data(
         else:
             results = repo.get_or_fetch(query_date)
 
-        # 解析通用筛选参数 - 支持 filters[columnKey] 格式
+        # 解析通用筛选参数 - 支持 filters[columnKey] 和 filter_columnKey 格式
         column_filters: Dict[str, List[str]] = {}
         for key, value in request.query_params.multi_items():
             if key.startswith('filters[') and key.endswith(']'):
                 column_key = key[8:-1]  # 提取列名
+                if column_key:
+                    if column_key not in column_filters:
+                        column_filters[column_key] = []
+                    column_filters[column_key].append(value)
+            elif key.startswith('filter_'):
+                column_key = key[7:]  # 提取列名（去掉 filter_ 前缀）
                 if column_key:
                     if column_key not in column_filters:
                         column_filters[column_key] = []
@@ -177,15 +183,16 @@ def get_selection_data(
                     # 检查是否匹配任意一个筛选值
                     match = False
                     for filter_val in filter_values:
-                        # 处理flag类型字段，通常值可能是 "是"/"否" 或 "1"/"0"
+                        # 处理flag类型字段，通常值可能是 "是"/"否"/"-" 或 "1"/"0"/None
                         if item_value is not None:
                             str_val = str(item_value).strip().lower()
                             filter_lower = filter_val.strip().lower()
                             # 匹配逻辑：如果筛选值和项值匹配（不区分大小写）
-                            # 或者 "是" 匹配 "1"，"否" 匹配 "0"
+                            # 或者 "是" 匹配 "1"，"否" 匹配 "0"，"-" 匹配空值
                             if (str_val == filter_lower or
                                 (filter_lower in ['是', '1'] and str_val in ['是', '1']) or
-                                (filter_lower in ['否', '0'] and str_val in ['否', '0'])):
+                                (filter_lower in ['否', '0'] and str_val in ['否', '0']) or
+                                (filter_lower == '-' and str_val == '-')):
                                 match = True
                                 break
                     if match:
@@ -574,6 +581,17 @@ def get_selection_data(
                 # 量价关系
                 "upper_large_volume": str(item.upper_large_volume).strip() if item.upper_large_volume else None,
                 "down_narrow_volume": str(item.down_narrow_volume).strip() if item.down_narrow_volume else None,
+                
+                # 自定义策略信号
+                "volume_up": str(item.volume_up).strip() if item.volume_up else None,
+                "parking_apron": str(item.parking_apron).strip() if item.parking_apron else None,
+                "backtrace_ma250": str(item.backtrace_ma250).strip() if item.backtrace_ma250 else None,
+                "breakthrough_platform": str(item.breakthrough_platform).strip() if item.breakthrough_platform else None,
+                "low_backtrace_increase": str(item.low_backtrace_increase).strip() if item.low_backtrace_increase else None,
+                "turtle_trade": str(item.turtle_trade).strip() if item.turtle_trade else None,
+                "high_tight_flag": str(item.high_tight_flag).strip() if item.high_tight_flag else None,
+                "climax_limitdown": str(item.climax_limitdown).strip() if item.climax_limitdown else None,
+                "low_atr_growth": str(item.low_atr_growth).strip() if item.low_atr_growth else None,
                 
                 # K线形态
                 "one_dayang_line": str(item.one_dayang_line).strip() if item.one_dayang_line else None,

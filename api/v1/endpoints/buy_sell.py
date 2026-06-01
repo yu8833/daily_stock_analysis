@@ -82,6 +82,218 @@ def _regex_match(text: str, pattern: str) -> bool:
         return pattern.lower() in text.lower()
 
 
+def _count_buy_signals(item) -> int:
+    """计算买入信号数量"""
+    count = 0
+    
+    # MACD金叉
+    if getattr(item, 'macd_golden_fork', None) == '1':
+        count += 1
+    if getattr(item, 'macd_golden_forkz', None) == '1':
+        count += 1
+    if getattr(item, 'macd_golden_forky', None) == '1':
+        count += 1
+    
+    # KDJ金叉
+    if getattr(item, 'kdj_golden_fork', None) == '1':
+        count += 1
+    if getattr(item, 'kdj_golden_forkz', None) == '1':
+        count += 1
+    if getattr(item, 'kdj_golden_forky', None) == '1':
+        count += 1
+    
+    # 放量突破
+    if getattr(item, 'break_through', None) == '1':
+        count += 1
+    
+    # 均线多头
+    if getattr(item, 'long_avg_array', None) == '1':
+        count += 1
+    
+    # 低位资金净流入
+    if getattr(item, 'low_funds_inflow', None) == '1':
+        count += 1
+    
+    # 突破均线
+    if getattr(item, 'breakup_ma_5days', None) == '1':
+        count += 1
+    if getattr(item, 'breakup_ma_10days', None) == '1':
+        count += 1
+    if getattr(item, 'breakup_ma_20days', None) == '1':
+        count += 1
+    if getattr(item, 'breakup_ma_60days', None) == '1':
+        count += 1
+    
+    # K线形态买入信号
+    if getattr(item, 'one_dayang_line', None) == '1':
+        count += 1
+    if getattr(item, 'two_dayang_lines', None) == '1':
+        count += 1
+    if getattr(item, 'rise_sun', None) == '1':
+        count += 1
+    if getattr(item, 'power_fulgun', None) == '1':
+        count += 1
+    if getattr(item, 'restore_justice', None) == '1':
+        count += 1
+    if getattr(item, 'heaven_rule', None) == '1':
+        count += 1
+    if getattr(item, 'upside_volume', None) == '1':
+        count += 1
+    if getattr(item, 'morning_star', None) == '1':
+        count += 1
+    if getattr(item, 'first_dawn', None) == '1':
+        count += 1
+    if getattr(item, 'reversing_hammer', None) == '1':
+        count += 1
+    if getattr(item, 'pregnant', None) == '1':
+        count += 1
+    if getattr(item, 'narrow_finish', None) == '1':
+        count += 1
+    if getattr(item, 'upper_8days', None) == '1':
+        count += 1
+    if getattr(item, 'upper_9days', None) == '1':
+        count += 1
+    if getattr(item, 'upper_4days', None) == '1':
+        count += 1
+    
+    # 自定义策略信号
+    if getattr(item, 'volume_up', None) == '1':
+        count += 1
+    if getattr(item, 'parking_apron', None) == '1':
+        count += 1
+    if getattr(item, 'backtrace_ma250', None) == '1':
+        count += 1
+    if getattr(item, 'breakthrough_platform', None) == '1':
+        count += 1
+    if getattr(item, 'low_backtrace_increase', None) == '1':
+        count += 1
+    if getattr(item, 'turtle_trade', None) == '1':
+        count += 1
+    if getattr(item, 'high_tight_flag', None) == '1':
+        count += 1
+    if getattr(item, 'low_atr_growth', None) == '1':
+        count += 1
+    
+    # 新高信号
+    if getattr(item, 'now_newhigh', None) == '1':
+        count += 1
+    if getattr(item, 'high_recent_3days', None) == '1':
+        count += 1
+    if getattr(item, 'high_recent_5days', None) == '1':
+        count += 1
+    if getattr(item, 'high_recent_10days', None) == '1':
+        count += 1
+    if getattr(item, 'high_recent_20days', None) == '1':
+        count += 1
+    if getattr(item, 'high_recent_30days', None) == '1':
+        count += 1
+    
+    # 跑赢大盘
+    if getattr(item, 'win_market_3days', None) == '1':
+        count += 1
+    if getattr(item, 'win_market_5days', None) == '1':
+        count += 1
+    if getattr(item, 'win_market_10days', None) == '1':
+        count += 1
+    if getattr(item, 'win_market_20days', None) == '1':
+        count += 1
+    if getattr(item, 'win_market_30days', None) == '1':
+        count += 1
+    
+    return count
+
+
+def _count_sell_signals(item) -> int:
+    """计算卖出信号数量"""
+    count = 0
+    
+    # 均线空头
+    if getattr(item, 'short_avg_array', None) == '1':
+        count += 1
+    
+    # 高位资金净流出
+    if getattr(item, 'high_funds_outflow', None) == '1':
+        count += 1
+    
+    # 连涨放量
+    if getattr(item, 'upper_large_volume', None) == '1':
+        count += 1
+    
+    # K线形态卖出信号
+    if getattr(item, 'shooting_star', None) == '1':
+        count += 1
+    if getattr(item, 'evening_star', None) == '1':
+        count += 1
+    if getattr(item, 'black_cloud_tops', None) == '1':
+        count += 1
+    if getattr(item, 'bearish_engulfing', None) == '1':
+        count += 1
+    if getattr(item, 'down_7days', None) == '1':
+        count += 1
+    
+    # 跌破均线
+    if getattr(item, 'breakdown_ma_5days', None) == '1':
+        count += 1
+    if getattr(item, 'breakdown_ma_10days', None) == '1':
+        count += 1
+    if getattr(item, 'breakdown_ma_20days', None) == '1':
+        count += 1
+    if getattr(item, 'breakdown_ma_60days', None) == '1':
+        count += 1
+    
+    # MACD死叉
+    if getattr(item, 'macd_dead_fork', None) == '1':
+        count += 1
+    if getattr(item, 'macd_dead_forkz', None) == '1':
+        count += 1
+    if getattr(item, 'macd_dead_forky', None) == '1':
+        count += 1
+    
+    # KDJ死叉
+    if getattr(item, 'kdj_dead_fork', None) == '1':
+        count += 1
+    if getattr(item, 'kdj_dead_forkz', None) == '1':
+        count += 1
+    if getattr(item, 'kdj_dead_forky', None) == '1':
+        count += 1
+    
+    # 下跌无量
+    if getattr(item, 'down_narrow_volume', None) == '1':
+        count += 1
+    
+    # 放量跌停
+    if getattr(item, 'climax_limitdown', None) == '1':
+        count += 1
+    
+    # 新低信号
+    if getattr(item, 'now_newlow', None) == '1':
+        count += 1
+    if getattr(item, 'low_recent_3days', None) == '1':
+        count += 1
+    if getattr(item, 'low_recent_5days', None) == '1':
+        count += 1
+    if getattr(item, 'low_recent_10days', None) == '1':
+        count += 1
+    if getattr(item, 'low_recent_20days', None) == '1':
+        count += 1
+    if getattr(item, 'low_recent_30days', None) == '1':
+        count += 1
+    
+    # 跑输大盘
+    if getattr(item, 'lose_market_3days', None) == '1':
+        count += 1
+    if getattr(item, 'lose_market_5days', None) == '1':
+        count += 1
+    if getattr(item, 'lose_market_10days', None) == '1':
+        count += 1
+    if getattr(item, 'lose_market_20days', None) == '1':
+        count += 1
+    if getattr(item, 'lose_market_30days', None) == '1':
+        count += 1
+    
+    return count
+
+
 def _generate_buy_reason(item) -> str:
     """生成买入理由"""
     reasons = []
@@ -89,10 +301,18 @@ def _generate_buy_reason(item) -> str:
     # MACD金叉
     if getattr(item, 'macd_golden_fork', None) == '1':
         reasons.append("MACD金叉")
+    elif getattr(item, 'macd_golden_forkz', None) == '1':
+        reasons.append("MACD周金叉")
+    elif getattr(item, 'macd_golden_forky', None) == '1':
+        reasons.append("MACD月金叉")
 
     # KDJ金叉
     if getattr(item, 'kdj_golden_fork', None) == '1':
         reasons.append("KDJ金叉")
+    elif getattr(item, 'kdj_golden_forkz', None) == '1':
+        reasons.append("KDJ周金叉")
+    elif getattr(item, 'kdj_golden_forky', None) == '1':
+        reasons.append("KDJ月金叉")
 
     # 放量突破
     if getattr(item, 'break_through', None) == '1':
@@ -111,6 +331,10 @@ def _generate_buy_reason(item) -> str:
         reasons.append("突破5日均线")
     elif getattr(item, 'breakup_ma_10days', None) == '1':
         reasons.append("突破10日均线")
+    elif getattr(item, 'breakup_ma_20days', None) == '1':
+        reasons.append("突破20日均线")
+    elif getattr(item, 'breakup_ma_60days', None) == '1':
+        reasons.append("突破60日均线")
 
     # K线形态买入信号
     if getattr(item, 'one_dayang_line', None) == '1':
@@ -121,12 +345,72 @@ def _generate_buy_reason(item) -> str:
         reasons.append("旭日东升")
     elif getattr(item, 'power_fulgun', None) == '1':
         reasons.append("多方炮")
+    elif getattr(item, 'restore_justice', None) == '1':
+        reasons.append("拨云见日")
+    elif getattr(item, 'heaven_rule', None) == '1':
+        reasons.append("天量法则")
+    elif getattr(item, 'upside_volume', None) == '1':
+        reasons.append("放量上攻")
     elif getattr(item, 'morning_star', None) == '1':
         reasons.append("早晨之星")
     elif getattr(item, 'first_dawn', None) == '1':
         reasons.append("曙光初现")
     elif getattr(item, 'reversing_hammer', None) == '1':
         reasons.append("倒锤头")
+    elif getattr(item, 'upper_8days', None) == '1':
+        reasons.append("八连阳")
+    elif getattr(item, 'upper_9days', None) == '1':
+        reasons.append("九连阳")
+    elif getattr(item, 'upper_4days', None) == '1':
+        reasons.append("四串阳")
+    elif getattr(item, 'pregnant', None) == '1':
+        reasons.append("身怀六甲")
+    elif getattr(item, 'narrow_finish', None) == '1':
+        reasons.append("窄幅整理")
+
+    # 自定义策略信号
+    if getattr(item, 'volume_up', None) == '1':
+        reasons.append("放量上涨")
+    elif getattr(item, 'parking_apron', None) == '1':
+        reasons.append("停机坪")
+    elif getattr(item, 'backtrace_ma250', None) == '1':
+        reasons.append("回踩年线")
+    elif getattr(item, 'breakthrough_platform', None) == '1':
+        reasons.append("突破平台")
+    elif getattr(item, 'low_backtrace_increase', None) == '1':
+        reasons.append("无大幅回撤")
+    elif getattr(item, 'turtle_trade', None) == '1':
+        reasons.append("海龟法则")
+    elif getattr(item, 'high_tight_flag', None) == '1':
+        reasons.append("宽窄旗形")
+    elif getattr(item, 'low_atr_growth', None) == '1':
+        reasons.append("低ATR成长")
+
+    # 新高信号
+    if getattr(item, 'now_newhigh', None) == '1':
+        reasons.append("今日新高")
+    elif getattr(item, 'high_recent_3days', None) == '1':
+        reasons.append("近3日新高")
+    elif getattr(item, 'high_recent_5days', None) == '1':
+        reasons.append("近5日新高")
+    elif getattr(item, 'high_recent_10days', None) == '1':
+        reasons.append("近10日新高")
+    elif getattr(item, 'high_recent_20days', None) == '1':
+        reasons.append("近20日新高")
+    elif getattr(item, 'high_recent_30days', None) == '1':
+        reasons.append("近30日新高")
+
+    # 跑赢大盘
+    if getattr(item, 'win_market_3days', None) == '1':
+        reasons.append("3日跑赢大盘")
+    elif getattr(item, 'win_market_5days', None) == '1':
+        reasons.append("5日跑赢大盘")
+    elif getattr(item, 'win_market_10days', None) == '1':
+        reasons.append("10日跑赢大盘")
+    elif getattr(item, 'win_market_20days', None) == '1':
+        reasons.append("20日跑赢大盘")
+    elif getattr(item, 'win_market_30days', None) == '1':
+        reasons.append("30日跑赢大盘")
 
     # 趋势位置分析
     try:
@@ -189,6 +473,66 @@ def _generate_sell_reason(item) -> str:
     elif getattr(item, 'down_7days', None) == '1':
         reasons.append("七连阴")
 
+    # 向下跌破均线
+    if getattr(item, 'breakdown_ma_5days', None) == '1':
+        reasons.append("跌破5日均线")
+    elif getattr(item, 'breakdown_ma_10days', None) == '1':
+        reasons.append("跌破10日均线")
+    elif getattr(item, 'breakdown_ma_20days', None) == '1':
+        reasons.append("跌破20日均线")
+    elif getattr(item, 'breakdown_ma_60days', None) == '1':
+        reasons.append("跌破60日均线")
+
+    # MACD死叉
+    if getattr(item, 'macd_dead_fork', None) == '1':
+        reasons.append("MACD死叉")
+    elif getattr(item, 'macd_dead_forkz', None) == '1':
+        reasons.append("MACD周死叉")
+    elif getattr(item, 'macd_dead_forky', None) == '1':
+        reasons.append("MACD月死叉")
+
+    # KDJ死叉
+    if getattr(item, 'kdj_dead_fork', None) == '1':
+        reasons.append("KDJ死叉")
+    elif getattr(item, 'kdj_dead_forkz', None) == '1':
+        reasons.append("KDJ周死叉")
+    elif getattr(item, 'kdj_dead_forky', None) == '1':
+        reasons.append("KDJ月死叉")
+
+    # 下跌无量
+    if getattr(item, 'down_narrow_volume', None) == '1':
+        reasons.append("下跌无量")
+
+    # 放量跌停
+    if getattr(item, 'climax_limitdown', None) == '1':
+        reasons.append("放量跌停")
+
+    # 新低信号
+    if getattr(item, 'now_newlow', None) == '1':
+        reasons.append("今日新低")
+    elif getattr(item, 'low_recent_3days', None) == '1':
+        reasons.append("近3日新低")
+    elif getattr(item, 'low_recent_5days', None) == '1':
+        reasons.append("近5日新低")
+    elif getattr(item, 'low_recent_10days', None) == '1':
+        reasons.append("近10日新低")
+    elif getattr(item, 'low_recent_20days', None) == '1':
+        reasons.append("近20日新低")
+    elif getattr(item, 'low_recent_30days', None) == '1':
+        reasons.append("近30日新低")
+
+    # 跑输大盘
+    if getattr(item, 'lose_market_3days', None) == '1':
+        reasons.append("3日跑输大盘")
+    elif getattr(item, 'lose_market_5days', None) == '1':
+        reasons.append("5日跑输大盘")
+    elif getattr(item, 'lose_market_10days', None) == '1':
+        reasons.append("10日跑输大盘")
+    elif getattr(item, 'lose_market_20days', None) == '1':
+        reasons.append("20日跑输大盘")
+    elif getattr(item, 'lose_market_30days', None) == '1':
+        reasons.append("30日跑输大盘")
+
     # 趋势位置分析
     try:
         if item.change_rate and float(item.change_rate) < -5:
@@ -227,10 +571,13 @@ def _filter_buy_signals(results: List) -> List:
     筛选买入信号股票
 
     基于技术指标筛选：
-    - MACD金叉
-    - KDJ金叉
-    - 放量突破
-    - 均线多头排列
+    - MACD金叉、KDJ金叉
+    - 放量突破、均线多头排列
+    - 低位资金净流入
+    - K线形态买入信号
+    - 自定义策略信号
+    - 新高信号
+    - 跑赢大盘
     """
     filtered = []
     for item in results:
@@ -244,8 +591,16 @@ def _filter_buy_signals(results: List) -> List:
         # MACD金叉信号
         if getattr(item, 'macd_golden_fork', None) == '1':
             has_buy_signal = True
+        elif getattr(item, 'macd_golden_forkz', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'macd_golden_forky', None) == '1':
+            has_buy_signal = True
         # KDJ金叉信号
         elif getattr(item, 'kdj_golden_fork', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'kdj_golden_forkz', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'kdj_golden_forky', None) == '1':
             has_buy_signal = True
         # 放量突破信号
         elif getattr(item, 'break_through', None) == '1':
@@ -261,6 +616,10 @@ def _filter_buy_signals(results: List) -> List:
             has_buy_signal = True
         elif getattr(item, 'breakup_ma_10days', None) == '1':
             has_buy_signal = True
+        elif getattr(item, 'breakup_ma_20days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'breakup_ma_60days', None) == '1':
+            has_buy_signal = True
         # K线形态买入信号
         elif getattr(item, 'one_dayang_line', None) == '1':
             has_buy_signal = True
@@ -270,11 +629,68 @@ def _filter_buy_signals(results: List) -> List:
             has_buy_signal = True
         elif getattr(item, 'power_fulgun', None) == '1':
             has_buy_signal = True
+        elif getattr(item, 'restore_justice', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'heaven_rule', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'upside_volume', None) == '1':
+            has_buy_signal = True
         elif getattr(item, 'morning_star', None) == '1':
             has_buy_signal = True
         elif getattr(item, 'first_dawn', None) == '1':
             has_buy_signal = True
         elif getattr(item, 'reversing_hammer', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'upper_8days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'upper_9days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'upper_4days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'pregnant', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'narrow_finish', None) == '1':
+            has_buy_signal = True
+        # 自定义策略信号
+        elif getattr(item, 'volume_up', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'parking_apron', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'backtrace_ma250', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'breakthrough_platform', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'low_backtrace_increase', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'turtle_trade', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'high_tight_flag', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'low_atr_growth', None) == '1':
+            has_buy_signal = True
+        # 新高信号
+        elif getattr(item, 'now_newhigh', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'high_recent_3days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'high_recent_5days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'high_recent_10days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'high_recent_20days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'high_recent_30days', None) == '1':
+            has_buy_signal = True
+        # 跑赢大盘
+        elif getattr(item, 'win_market_3days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'win_market_5days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'win_market_10days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'win_market_20days', None) == '1':
+            has_buy_signal = True
+        elif getattr(item, 'win_market_30days', None) == '1':
             has_buy_signal = True
 
         if has_buy_signal:
@@ -291,6 +707,10 @@ def _filter_sell_signals(results: List) -> List:
     - 均线空头排列
     - 高位资金净流出
     - K线形态卖出信号
+    - MACD/KDJ死叉
+    - 跌破均线
+    - 新低信号
+    - 跑输大盘
     """
     filtered = []
     for item in results:
@@ -321,6 +741,59 @@ def _filter_sell_signals(results: List) -> List:
             has_sell_signal = True
         elif getattr(item, 'down_7days', None) == '1':
             has_sell_signal = True
+        # 向下跌破均线
+        elif getattr(item, 'breakdown_ma_5days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'breakdown_ma_10days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'breakdown_ma_20days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'breakdown_ma_60days', None) == '1':
+            has_sell_signal = True
+        # MACD死叉
+        elif getattr(item, 'macd_dead_fork', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'macd_dead_forkz', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'macd_dead_forky', None) == '1':
+            has_sell_signal = True
+        # KDJ死叉
+        elif getattr(item, 'kdj_dead_fork', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'kdj_dead_forkz', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'kdj_dead_forky', None) == '1':
+            has_sell_signal = True
+        # 下跌无量
+        elif getattr(item, 'down_narrow_volume', None) == '1':
+            has_sell_signal = True
+        # 放量跌停
+        elif getattr(item, 'climax_limitdown', None) == '1':
+            has_sell_signal = True
+        # 新低信号
+        elif getattr(item, 'now_newlow', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'low_recent_3days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'low_recent_5days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'low_recent_10days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'low_recent_20days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'low_recent_30days', None) == '1':
+            has_sell_signal = True
+        # 跑输大盘
+        elif getattr(item, 'lose_market_3days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'lose_market_5days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'lose_market_10days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'lose_market_20days', None) == '1':
+            has_sell_signal = True
+        elif getattr(item, 'lose_market_30days', None) == '1':
+            has_sell_signal = True
 
         if has_sell_signal:
             filtered.append(item)
@@ -332,10 +805,12 @@ def _format_stock_data(items: List, is_buy: bool = True) -> List[Dict]:
     """格式化股票数据为返回格式"""
     formatted = []
     for item in items:
+        signal_count = _count_buy_signals(item) if is_buy else _count_sell_signals(item)
         formatted.append({
             "code": str(item.code).strip(),
             "name": str(item.name).strip(),
             "reason": _generate_buy_reason(item) if is_buy else _generate_sell_reason(item),
+            "signal_count": signal_count,
             "new_price": item.new_price,
             "change_rate": item.change_rate,
             "volume_ratio": item.volume_ratio,
@@ -359,20 +834,94 @@ def _format_stock_data(items: List, is_buy: bool = True) -> List[Dict]:
             "ma60": item.ma60,
             "ma120": item.ma120,
             "ma250": item.ma250,
-            # 信号标记
+            # MACD/KDJ 金叉
             "macd_golden_fork": str(item.macd_golden_fork).strip() if item.macd_golden_fork else None,
+            "macd_golden_forkz": str(item.macd_golden_forkz).strip() if hasattr(item, 'macd_golden_forkz') and item.macd_golden_forkz else None,
+            "macd_golden_forky": str(item.macd_golden_forky).strip() if hasattr(item, 'macd_golden_forky') and item.macd_golden_forky else None,
             "kdj_golden_fork": str(item.kdj_golden_fork).strip() if item.kdj_golden_fork else None,
+            "kdj_golden_forkz": str(item.kdj_golden_forkz).strip() if hasattr(item, 'kdj_golden_forkz') and item.kdj_golden_forkz else None,
+            "kdj_golden_forky": str(item.kdj_golden_forky).strip() if hasattr(item, 'kdj_golden_forky') and item.kdj_golden_forky else None,
+            # MACD/KDJ 死叉
+            "macd_dead_fork": str(item.macd_dead_fork).strip() if hasattr(item, 'macd_dead_fork') and item.macd_dead_fork else None,
+            "macd_dead_forkz": str(item.macd_dead_forkz).strip() if hasattr(item, 'macd_dead_forkz') and item.macd_dead_forkz else None,
+            "macd_dead_forky": str(item.macd_dead_forky).strip() if hasattr(item, 'macd_dead_forky') and item.macd_dead_forky else None,
+            "kdj_dead_fork": str(item.kdj_dead_fork).strip() if hasattr(item, 'kdj_dead_fork') and item.kdj_dead_fork else None,
+            "kdj_dead_forkz": str(item.kdj_dead_forkz).strip() if hasattr(item, 'kdj_dead_forkz') and item.kdj_dead_forkz else None,
+            "kdj_dead_forky": str(item.kdj_dead_forky).strip() if hasattr(item, 'kdj_dead_forky') and item.kdj_dead_forky else None,
+            # 突破均线
             "break_through": str(item.break_through).strip() if item.break_through else None,
+            "breakup_ma_5days": str(item.breakup_ma_5days).strip() if hasattr(item, 'breakup_ma_5days') and item.breakup_ma_5days else None,
+            "breakup_ma_10days": str(item.breakup_ma_10days).strip() if hasattr(item, 'breakup_ma_10days') and item.breakup_ma_10days else None,
+            "breakup_ma_20days": str(item.breakup_ma_20days).strip() if hasattr(item, 'breakup_ma_20days') and item.breakup_ma_20days else None,
+            "breakup_ma_60days": str(item.breakup_ma_60days).strip() if hasattr(item, 'breakup_ma_60days') and item.breakup_ma_60days else None,
+            "breakdown_ma_5days": str(item.breakdown_ma_5days).strip() if hasattr(item, 'breakdown_ma_5days') and item.breakdown_ma_5days else None,
+            "breakdown_ma_10days": str(item.breakdown_ma_10days).strip() if hasattr(item, 'breakdown_ma_10days') and item.breakdown_ma_10days else None,
+            "breakdown_ma_20days": str(item.breakdown_ma_20days).strip() if hasattr(item, 'breakdown_ma_20days') and item.breakdown_ma_20days else None,
+            "breakdown_ma_60days": str(item.breakdown_ma_60days).strip() if hasattr(item, 'breakdown_ma_60days') and item.breakdown_ma_60days else None,
+            # 均线排列
             "long_avg_array": str(item.long_avg_array).strip() if item.long_avg_array else None,
             "short_avg_array": str(item.short_avg_array).strip() if item.short_avg_array else None,
+            # 资金流入
             "low_funds_inflow": str(item.low_funds_inflow).strip() if item.low_funds_inflow else None,
             "high_funds_outflow": str(item.high_funds_outflow).strip() if item.high_funds_outflow else None,
+            # K线形态 - 买入
+            "one_dayang_line": str(item.one_dayang_line).strip() if hasattr(item, 'one_dayang_line') and item.one_dayang_line else None,
+            "two_dayang_lines": str(item.two_dayang_lines).strip() if hasattr(item, 'two_dayang_lines') and item.two_dayang_lines else None,
+            "rise_sun": str(item.rise_sun).strip() if hasattr(item, 'rise_sun') and item.rise_sun else None,
+            "power_fulgun": str(item.power_fulgun).strip() if hasattr(item, 'power_fulgun') and item.power_fulgun else None,
+            "restore_justice": str(item.restore_justice).strip() if hasattr(item, 'restore_justice') and item.restore_justice else None,
+            "heaven_rule": str(item.heaven_rule).strip() if hasattr(item, 'heaven_rule') and item.heaven_rule else None,
+            "upside_volume": str(item.upside_volume).strip() if hasattr(item, 'upside_volume') and item.upside_volume else None,
+            "morning_star": str(item.morning_star).strip() if hasattr(item, 'morning_star') and item.morning_star else None,
+            "first_dawn": str(item.first_dawn).strip() if hasattr(item, 'first_dawn') and item.first_dawn else None,
+            "reversing_hammer": str(item.reversing_hammer).strip() if hasattr(item, 'reversing_hammer') and item.reversing_hammer else None,
+            "pregnant": str(item.pregnant).strip() if hasattr(item, 'pregnant') and item.pregnant else None,
+            "narrow_finish": str(item.narrow_finish).strip() if hasattr(item, 'narrow_finish') and item.narrow_finish else None,
+            "upper_8days": str(item.upper_8days).strip() if hasattr(item, 'upper_8days') and item.upper_8days else None,
+            "upper_9days": str(item.upper_9days).strip() if hasattr(item, 'upper_9days') and item.upper_9days else None,
+            "upper_4days": str(item.upper_4days).strip() if hasattr(item, 'upper_4days') and item.upper_4days else None,
+            # K线形态 - 卖出
             "upper_large_volume": str(item.upper_large_volume).strip() if getattr(item, 'upper_large_volume', None) else None,
             "shooting_star": str(item.shooting_star).strip() if getattr(item, 'shooting_star', None) else None,
             "evening_star": str(item.evening_star).strip() if getattr(item, 'evening_star', None) else None,
             "black_cloud_tops": str(item.black_cloud_tops).strip() if getattr(item, 'black_cloud_tops', None) else None,
             "bearish_engulfing": str(item.bearish_engulfing).strip() if getattr(item, 'bearish_engulfing', None) else None,
             "down_7days": str(item.down_7days).strip() if getattr(item, 'down_7days', None) else None,
+            "down_narrow_volume": str(item.down_narrow_volume).strip() if hasattr(item, 'down_narrow_volume') and item.down_narrow_volume else None,
+            "climax_limitdown": str(item.climax_limitdown).strip() if hasattr(item, 'climax_limitdown') and item.climax_limitdown else None,
+            # 自定义策略
+            "volume_up": str(item.volume_up).strip() if hasattr(item, 'volume_up') and item.volume_up else None,
+            "parking_apron": str(item.parking_apron).strip() if hasattr(item, 'parking_apron') and item.parking_apron else None,
+            "backtrace_ma250": str(item.backtrace_ma250).strip() if hasattr(item, 'backtrace_ma250') and item.backtrace_ma250 else None,
+            "breakthrough_platform": str(item.breakthrough_platform).strip() if hasattr(item, 'breakthrough_platform') and item.breakthrough_platform else None,
+            "low_backtrace_increase": str(item.low_backtrace_increase).strip() if hasattr(item, 'low_backtrace_increase') and item.low_backtrace_increase else None,
+            "turtle_trade": str(item.turtle_trade).strip() if hasattr(item, 'turtle_trade') and item.turtle_trade else None,
+            "high_tight_flag": str(item.high_tight_flag).strip() if hasattr(item, 'high_tight_flag') and item.high_tight_flag else None,
+            "low_atr_growth": str(item.low_atr_growth).strip() if hasattr(item, 'low_atr_growth') and item.low_atr_growth else None,
+            # 新高/新低
+            "now_newhigh": str(item.now_newhigh).strip() if hasattr(item, 'now_newhigh') and item.now_newhigh else None,
+            "high_recent_3days": str(item.high_recent_3days).strip() if hasattr(item, 'high_recent_3days') and item.high_recent_3days else None,
+            "high_recent_5days": str(item.high_recent_5days).strip() if hasattr(item, 'high_recent_5days') and item.high_recent_5days else None,
+            "high_recent_10days": str(item.high_recent_10days).strip() if hasattr(item, 'high_recent_10days') and item.high_recent_10days else None,
+            "high_recent_20days": str(item.high_recent_20days).strip() if hasattr(item, 'high_recent_20days') and item.high_recent_20days else None,
+            "high_recent_30days": str(item.high_recent_30days).strip() if hasattr(item, 'high_recent_30days') and item.high_recent_30days else None,
+            "now_newlow": str(item.now_newlow).strip() if hasattr(item, 'now_newlow') and item.now_newlow else None,
+            "low_recent_3days": str(item.low_recent_3days).strip() if hasattr(item, 'low_recent_3days') and item.low_recent_3days else None,
+            "low_recent_5days": str(item.low_recent_5days).strip() if hasattr(item, 'low_recent_5days') and item.low_recent_5days else None,
+            "low_recent_10days": str(item.low_recent_10days).strip() if hasattr(item, 'low_recent_10days') and item.low_recent_10days else None,
+            "low_recent_20days": str(item.low_recent_20days).strip() if hasattr(item, 'low_recent_20days') and item.low_recent_20days else None,
+            "low_recent_30days": str(item.low_recent_30days).strip() if hasattr(item, 'low_recent_30days') and item.low_recent_30days else None,
+            # 跑赢/跑输大盘
+            "win_market_3days": str(item.win_market_3days).strip() if hasattr(item, 'win_market_3days') and item.win_market_3days else None,
+            "win_market_5days": str(item.win_market_5days).strip() if hasattr(item, 'win_market_5days') and item.win_market_5days else None,
+            "win_market_10days": str(item.win_market_10days).strip() if hasattr(item, 'win_market_10days') and item.win_market_10days else None,
+            "win_market_20days": str(item.win_market_20days).strip() if hasattr(item, 'win_market_20days') and item.win_market_20days else None,
+            "win_market_30days": str(item.win_market_30days).strip() if hasattr(item, 'win_market_30days') and item.win_market_30days else None,
+            "lose_market_3days": str(item.lose_market_3days).strip() if hasattr(item, 'lose_market_3days') and item.lose_market_3days else None,
+            "lose_market_5days": str(item.lose_market_5days).strip() if hasattr(item, 'lose_market_5days') and item.lose_market_5days else None,
+            "lose_market_10days": str(item.lose_market_10days).strip() if hasattr(item, 'lose_market_10days') and item.lose_market_10days else None,
+            "lose_market_20days": str(item.lose_market_20days).strip() if hasattr(item, 'lose_market_20days') and item.lose_market_20days else None,
+            "lose_market_30days": str(item.lose_market_30days).strip() if hasattr(item, 'lose_market_30days') and item.lose_market_30days else None,
         })
     return formatted
 
@@ -390,7 +939,7 @@ def get_buy_stocks(
     date: Optional[str] = Query(None, description="日期（YYYY-MM-DD），默认当天"),
     page: int = Query(1, ge=1, description="页码，从1开始"),
     page_size: int = Query(20, ge=1, le=100, description="每页条数"),
-    sort_field: str = Query("change_rate", description="排序字段：change_rate/volume/deal_amount"),
+    sort_field: str = Query("signal_count", description="排序字段：signal_count/change_rate/volume/deal_amount"),
     sort_order: str = Query("desc", description="排序方式：asc/desc"),
     keyword: Optional[str] = Query(None, description="关键字搜索，匹配代码/名称"),
     industry: Optional[str] = Query(None, description="行业筛选"),
@@ -445,10 +994,14 @@ def get_buy_stocks(
             industry_lower = industry.lower().strip()
             results = [r for r in results if r.industry and industry_lower in str(r.industry).lower()]
 
-        # 排序
+        # 排序 - 默认按信号匹配数量降序
         sort_key = sort_field
         reverse = sort_order.lower() == 'desc'
-        results.sort(key=lambda x: (getattr(x, sort_key, 0) or 0), reverse=reverse)
+        
+        if sort_key == 'signal_count':
+            results.sort(key=_count_buy_signals, reverse=reverse)
+        else:
+            results.sort(key=lambda x: (getattr(x, sort_key, 0) or 0), reverse=reverse)
 
         total_count = len(results)
         total_pages = (total_count + page_size - 1) // page_size
@@ -496,7 +1049,7 @@ def get_sell_stocks(
     date: Optional[str] = Query(None, description="日期（YYYY-MM-DD），默认当天"),
     page: int = Query(1, ge=1, description="页码，从1开始"),
     page_size: int = Query(20, ge=1, le=100, description="每页条数"),
-    sort_field: str = Query("change_rate", description="排序字段：change_rate/volume/deal_amount"),
+    sort_field: str = Query("signal_count", description="排序字段：signal_count/change_rate/volume/deal_amount"),
     sort_order: str = Query("desc", description="排序方式：asc/desc"),
     keyword: Optional[str] = Query(None, description="关键字搜索，匹配代码/名称"),
     industry: Optional[str] = Query(None, description="行业筛选"),
@@ -547,10 +1100,14 @@ def get_sell_stocks(
             industry_lower = industry.lower().strip()
             results = [r for r in results if r.industry and industry_lower in str(r.industry).lower()]
 
-        # 排序
+        # 排序 - 默认按信号匹配数量降序
         sort_key = sort_field
         reverse = sort_order.lower() == 'desc'
-        results.sort(key=lambda x: (getattr(x, sort_key, 0) or 0), reverse=reverse)
+        
+        if sort_key == 'signal_count':
+            results.sort(key=_count_sell_signals, reverse=reverse)
+        else:
+            results.sort(key=lambda x: (getattr(x, sort_key, 0) or 0), reverse=reverse)
 
         total_count = len(results)
         total_pages = (total_count + page_size - 1) // page_size

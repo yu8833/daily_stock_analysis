@@ -8,6 +8,7 @@
 1. 封装选股数据的数据库操作
 2. 提供选股数据查询接口
 3. 支持数据持久化和缓存
+4. 计算自定义策略信号
 """
 
 import logging
@@ -17,8 +18,10 @@ from typing import Optional, List, Dict, Any
 import pandas as pd
 from sqlalchemy import select, and_, desc, delete
 
-from src.storage import DatabaseManager, StockSelection
+from src.storage import DatabaseManager, StockSelection, StockDaily
 from data_provider.eastmoney_selection_fetcher import EastmoneySelectionFetcher
+
+# 策略模块在 API 层导入，不在数据保存时计算
 
 logger = logging.getLogger(__name__)
 
@@ -146,9 +149,13 @@ class SelectionRepository:
         with self.db.get_session() as session:
             for _, row in df.iterrows():
                 try:
+                    stock_code = str(row.get('code', '')).strip()
+                    
+                    kline_data = self._get_kline_data(stock_code, days=250)
+                    
                     record = StockSelection(
                         date=query_date,
-                        code=str(row.get('code', '')).strip(),
+                        code=stock_code,
                         name=str(row.get('name', '')).strip(),
                         
                         # 行情数据
@@ -411,6 +418,17 @@ class SelectionRepository:
                         ma60=row.get('ma60'),
                         ma120=row.get('ma120'),
                         ma250=row.get('ma250'),
+                        
+                        # 自定义策略信号（基于现有数据计算）
+                        volume_up=self._calculate_volume_up(row),
+                        parking_apron=self._calculate_parking_apron(stock_code, kline_data),
+                        backtrace_ma250=self._calculate_backtrace_ma250(row),
+                        breakthrough_platform=self._calculate_breakthrough_platform(row),
+                        low_backtrace_increase=self._calculate_low_backtrace_increase(stock_code, kline_data),
+                        turtle_trade=self._calculate_turtle_trade(stock_code, kline_data),
+                        high_tight_flag=self._calculate_high_tight_flag(stock_code, kline_data),
+                        climax_limitdown=self._calculate_climax_limitdown(row),
+                        low_atr_growth=self._calculate_low_atr_growth(stock_code, kline_data),
                     )
                     session.add(record)
                     saved_count += 1
@@ -421,6 +439,108 @@ class SelectionRepository:
             logger.info(f"保存选股数据成功: {query_date}, 新增 {saved_count} 条")
         
         return saved_count
+    
+    def _calculate_volume_up(self, row) -> str:
+        """
+        放量上涨策略：成交量比例>=2 且 上涨>=2% 且 成交额>=2亿
+        
+        Args:
+            row: 股票数据行
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            volume_ratio = row.get('volume_ratio')
+            change_rate = row.get('change_rate')
+            deal_amount = row.get('deal_amount')
+            
+            if volume_ratio is None or change_rate is None or deal_amount is None:
+                return None
+            
+            if volume_ratio >= 2 and change_rate >= 2 and deal_amount >= 200000000:
+                return "是"
+            return None
+        except Exception as e:
+            logger.debug(f"计算放量上涨失败: {e}")
+            return None
+    
+    def _calculate_backtrace_ma250(self, row) -> str:
+        """
+        回踩年线策略：收盘价接近250日均线
+        
+        Args:
+            row: 股票数据行
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            new_price = row.get('new_price')
+            ma250 = row.get('ma250')
+            
+            if new_price is None or ma250 is None or ma250 == 0:
+                return None
+            
+            ratio = new_price / ma250
+            # 在年线附近 ±3% 范围内
+            if 0.97 <= ratio <= 1.03:
+                return "是"
+            return None
+        except Exception as e:
+            logger.debug(f"计算回踩年线失败: {e}")
+            return None
+    
+    def _calculate_breakthrough_platform(self, row) -> str:
+        """
+        突破平台策略：收盘价突破60日均线且放量
+        
+        Args:
+            row: 股票数据行
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            new_price = row.get('new_price')
+            ma60 = row.get('ma60')
+            volume_ratio = row.get('volume_ratio')
+            change_rate = row.get('change_rate')
+            
+            if new_price is None or ma60 is None or ma60 == 0 or volume_ratio is None:
+                return None
+            
+            # 收盘价站上60日均线且放量上涨
+            if new_price > ma60 and volume_ratio >= 1.5 and change_rate >= 1:
+                return "是"
+            return None
+        except Exception as e:
+            logger.debug(f"计算突破平台失败: {e}")
+            return None
+    
+    def _calculate_climax_limitdown(self, row) -> str:
+        """
+        放量跌停策略：跌幅>=9.5%且放量
+        
+        Args:
+            row: 股票数据行
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            change_rate = row.get('change_rate')
+            volume_ratio = row.get('volume_ratio')
+            
+            if change_rate is None or volume_ratio is None:
+                return None
+            
+            if change_rate <= -9.5 and volume_ratio >= 2:
+                return "是"
+            return None
+        except Exception as e:
+            logger.debug(f"计算放量跌停失败: {e}")
+            return None
     
     def _delete_date_data(self, query_date: date) -> None:
         """
@@ -435,6 +555,254 @@ class SelectionRepository:
                 .where(StockSelection.date == query_date)
             )
             session.commit()
+    
+    def _get_kline_data(self, code: str, days: int = 250) -> Optional[pd.DataFrame]:
+        """
+        获取股票的历史K线数据
+        
+        Args:
+            code: 股票代码
+            days: 获取的天数（默认250天）
+            
+        Returns:
+            包含历史K线数据的DataFrame，列包括 date, close, open, volume, p_change 等
+        """
+        try:
+            with self.db.get_session() as session:
+                rows = session.execute(
+                    select(StockDaily)
+                    .where(StockDaily.code == code)
+                    .order_by(desc(StockDaily.date))
+                    .limit(days)
+                )
+                data = []
+                for row in rows:
+                    data.append({
+                        'date': row.date.strftime('%Y-%m-%d') if hasattr(row.date, 'strftime') else str(row.date),
+                        'close': row.close,
+                        'open': row.open,
+                        'high': row.high,
+                        'low': row.low,
+                        'volume': row.volume,
+                        'p_change': row.pct_chg,
+                    })
+                if not data:
+                    return None
+                return pd.DataFrame(data)
+        except Exception as e:
+            logger.debug(f"获取K线数据失败 ({code}): {e}")
+            return None
+    
+    def _calculate_parking_apron(self, code: str, data: pd.DataFrame) -> Optional[str]:
+        """
+        停机坪策略：
+        1. 最近15日有涨幅大于9.5%，且必须是放量上涨
+        2. 紧接的下个交易日必须高开，收盘价必须上涨，且与开盘价不能大于等于相差3%
+        3. 接下2、3个交易日必须高开，收盘价必须上涨，且与开盘价不能大于等于相差3%，且每天涨跌幅在5%间
+        
+        Args:
+            code: 股票代码
+            data: 历史K线数据DataFrame
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            if data is None or len(data) < 15:
+                return None
+            
+            code_name = (data.iloc[0]['date'], code)
+            
+            for i in range(len(data) - 1, max(0, len(data) - 16), -1):
+                row = data.iloc[i]
+                if row['p_change'] > 9.5:
+                    limitup_date = row['date']
+                    limitup_price = row['close']
+                    
+                    idx = data[data['date'] == limitup_date].index[0]
+                    if idx >= len(data) - 1:
+                        continue
+                    
+                    consolidation_start = idx + 1
+                    consolidation_days = data.iloc[consolidation_start:consolidation_start + 3]
+                    
+                    if len(consolidation_days) < 3:
+                        continue
+                    
+                    day1 = consolidation_days.iloc[0]
+                    if not (day1['close'] > limitup_price and day1['open'] > limitup_price and
+                            0.97 < day1['close'] / day1['open'] < 1.03):
+                        continue
+                    
+                    all_valid = True
+                    for j in range(1, 3):
+                        day = consolidation_days.iloc[j]
+                        if not (0.97 < (day['close'] / day['open']) < 1.03 and
+                                -5 < day['p_change'] < 5 and
+                                day['close'] > limitup_price and
+                                day['open'] > limitup_price):
+                            all_valid = False
+                            break
+                    
+                    if all_valid:
+                        return "是"
+            return None
+        except Exception as e:
+            logger.debug(f"计算停机坪策略失败 ({code}): {e}")
+            return None
+    
+    def _calculate_low_backtrace_increase(self, code: str, data: pd.DataFrame) -> Optional[str]:
+        """
+        无大幅回撤策略：
+        1. 当日收盘价比60日前的收盘价的涨幅小于0.6
+        2. 最近60日，不能有单日跌幅超7%、高开低走7%、两日累计跌幅10%、两日高开低走累计10%
+        
+        Args:
+            code: 股票代码
+            data: 历史K线数据DataFrame
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            if data is None or len(data) < 60:
+                return None
+            
+            data = data.head(60)
+            
+            ratio_increase = (data.iloc[0]['close'] - data.iloc[-1]['close']) / data.iloc[-1]['close']
+            if ratio_increase < 0.6:
+                return None
+            
+            previous_p_change = 100.0
+            previous_open = -1000000.0
+            for _, row in data.iterrows():
+                p_change = row['p_change']
+                close = row['close']
+                open_price = row['open']
+                
+                if (p_change < -7 or
+                    (close - open_price) / open_price * 100 < -7 or
+                    previous_p_change + p_change < -10 or
+                    (close - previous_open) / previous_open * 100 < -10):
+                    return None
+                previous_p_change = p_change
+                previous_open = open_price
+            return "是"
+        except Exception as e:
+            logger.debug(f"计算无大幅回撤策略失败 ({code}): {e}")
+            return None
+    
+    def _calculate_turtle_trade(self, code: str, data: pd.DataFrame) -> Optional[str]:
+        """
+        海龟交易法则策略：
+        1. 当日收盘价 >= 最近60日最高收盘价
+        
+        Args:
+            code: 股票代码
+            data: 历史K线数据DataFrame
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            if data is None or len(data) < 60:
+                return None
+            
+            last_close = data.iloc[0]['close']
+            max_close = data['close'].max()
+            
+            if last_close >= max_close:
+                return "是"
+            return None
+        except Exception as e:
+            logger.debug(f"计算海龟法则策略失败 ({code}): {e}")
+            return None
+    
+    def _calculate_high_tight_flag(self, code: str, data: pd.DataFrame) -> Optional[str]:
+        """
+        宽窄旗形策略：
+        1. 必须至少上市交易60日
+        2. 当日收盘价/之前24~10日的最低价>=1.9
+        3. 之前24~10日必须连续两天涨幅大于等于9.5%
+        
+        Args:
+            code: 股票代码
+            data: 历史K线数据DataFrame
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            if data is None or len(data) < 24:
+                return None
+            
+            recent_24 = data.head(24)
+            period_10_24 = recent_24.tail(15)
+            
+            if len(period_10_24) < 14:
+                return None
+            
+            low = period_10_24['low'].min()
+            last_close = data.iloc[0]['close']
+            
+            if low == 0:
+                return None
+            
+            ratio_increase = last_close / low
+            if ratio_increase < 1.9:
+                return None
+            
+            prev_p_change = 0.0
+            for _, row in period_10_24.iterrows():
+                p_change = row['p_change']
+                if p_change >= 9.5:
+                    if prev_p_change >= 9.5:
+                        return "是"
+                    prev_p_change = p_change
+                else:
+                    prev_p_change = 0.0
+            return None
+        except Exception as e:
+            logger.debug(f"计算宽窄旗形策略失败 ({code}): {e}")
+            return None
+    
+    def _calculate_low_atr_growth(self, code: str, data: pd.DataFrame) -> Optional[str]:
+        """
+        低ATR成长策略：
+        1. 必须至少上市交易250日
+        2. 最近10个交易日的最高收盘价必须比最近10个交易日的最低收盘价高1.1倍
+        
+        Args:
+            code: 股票代码
+            data: 历史K线数据DataFrame
+            
+        Returns:
+            "是" 如果策略匹配，None 否则
+        """
+        try:
+            if data is None or len(data) < 10:
+                return None
+            
+            recent_10 = data.head(10)
+            
+            highest_close = recent_10['close'].max()
+            lowest_close = recent_10['close'].min()
+            
+            if lowest_close == 0:
+                return None
+            
+            atr = recent_10['p_change'].abs().mean()
+            if atr > 10:
+                return None
+            
+            ratio = highest_close / lowest_close
+            if ratio > 1.1:
+                return "是"
+            return None
+        except Exception as e:
+            logger.debug(f"计算低ATR成长策略失败 ({code}): {e}")
+            return None
     
     def get_or_fetch(self, query_date: date, check_missing: bool = False) -> List[StockSelection]:
         """

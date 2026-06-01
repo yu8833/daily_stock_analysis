@@ -539,6 +539,17 @@ class StockSelection(Base):
     upper_large_volume = Column(String(2))  # 连涨放量
     down_narrow_volume = Column(String(2))  # 下跌无量
     
+    # 自定义策略信号
+    volume_up = Column(String(2))  # 放量上涨
+    parking_apron = Column(String(2))  # 停机坪
+    backtrace_ma250 = Column(String(2))  # 回踩年线
+    breakthrough_platform = Column(String(2))  # 突破平台
+    low_backtrace_increase = Column(String(2))  # 无大幅回撤
+    turtle_trade = Column(String(2))  # 海龟交易法则
+    high_tight_flag = Column(String(2))  # 宽而窄的旗形
+    climax_limitdown = Column(String(2))  # 放量跌停
+    low_atr_growth = Column(String(2))  # 低ATR成长
+    
     # K线形态
     one_dayang_line = Column(String(2))  # 一根大阳线
     two_dayang_lines = Column(String(2))  # 两根大阳线

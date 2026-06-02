@@ -226,7 +226,7 @@ class LimitUpRepository:
     
     def get_or_fetch(self, query_date: date, check_missing: bool = False) -> List[StockLimitupReason]:
         """
-        获取指定日期的涨停数据，如果数据库中没有则从数据源获取并保存
+        获取指定日期的涨停数据
         
         Args:
             query_date: 查询日期
@@ -237,6 +237,9 @@ class LimitUpRepository:
         """
         # 先检查数据库
         results = self.get_by_date(query_date)
+        
+        today = date.today()
+        
         if results:
             if check_missing:
                 # 检查是否有缺失字段的记录
@@ -252,12 +255,13 @@ class LimitUpRepository:
             logger.debug(f"从数据库获取涨停数据: {query_date}, {len(results)} 条")
             return results
         
-        # 数据库没有，从数据源获取
-        logger.info(f"数据库未找到 {query_date} 的涨停数据，从数据源获取")
-        self.save_from_fetcher(query_date)
-        
-        # 返回获取的数据
-        return self.get_by_date(query_date)
+        else:
+            # 数据库没有，从数据源获取（同花顺接口支持历史日期！）
+            logger.info(f"数据库未找到 {query_date} 的涨停数据，从数据源获取")
+            self.save_from_fetcher(query_date)
+            # 返回获取的数据
+            results = self.get_by_date(query_date)
+            return results
     
     def batch_fetch_and_save(self, dates: List[date]) -> Dict[date, int]:
         """

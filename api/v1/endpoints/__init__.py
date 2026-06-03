@@ -19,6 +19,7 @@ from api.v1.endpoints import (
     usage,
     limitup,
     selection,
+    market_data,
 )
 __all__ = [
     "health",
@@ -31,4 +32,5 @@ __all__ = [
     "usage",
     "limitup",
     "selection",
+    "market_data",
 ]

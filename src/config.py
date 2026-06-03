@@ -1065,7 +1065,6 @@ class Config:
         if http_proxy:
             # 国内金融数据源域名列表
             domestic_domains = [
-                'eastmoney.com',   # 东方财富 (Efinance/Akshare)
                 'sina.com.cn',     # 新浪财经 (Akshare)
                 '163.com',         # 网易财经 (Akshare)
                 'tushare.pro',     # Tushare
@@ -1077,6 +1076,12 @@ class Config:
                 'localhost',
                 '127.0.0.1'
             ]
+            
+            # 检查是否需要让东方财富网通过代理（用于解决东方财富直接访问失败的问题）
+            proxy_eastmoney = os.getenv('PROXY_EASTMONEY', 'false').lower() == 'true'
+            if not proxy_eastmoney:
+                # 默认行为：东方财富网不通过代理
+                domestic_domains.append('eastmoney.com')
 
             # 获取现有的 no_proxy
             current_no_proxy = os.getenv('NO_PROXY') or os.getenv('no_proxy') or ''

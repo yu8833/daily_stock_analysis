@@ -53,7 +53,7 @@ export const Shell: React.FC<ShellProps> = ({ children }) => {
           className={cn(
             'sticky top-1.5 z-40 hidden shrink-0 overflow-visible rounded-2xl border border-[var(--shell-sidebar-border)] bg-card/72 shadow-soft-card backdrop-blur-sm transition-[width,margin] duration-200 lg:flex',
             'max-h-[calc(100vh-1rem)] self-start sm:top-2 sm:max-h-[calc(100vh-1rem)]',
-            collapsed ? 'w-[64px]' : 'w-[116px]'
+            collapsed ? 'w-[64px]' : 'w-[140px]'
           )}
           aria-label="桌面侧边导航"
         >

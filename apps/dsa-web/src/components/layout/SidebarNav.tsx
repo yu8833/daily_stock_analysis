@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { BarChart3, Home, LogOut, MessageSquareQuote, Settings2, TrendingUp, ArrowUpCircle, ArrowDownCircle, CandlestickChart } from 'lucide-react';
+import { 
+  BarChart3, Home, LogOut, MessageSquareQuote, Settings2, TrendingUp, ArrowUpCircle, 
+  ArrowDownCircle, CandlestickChart, Sun, Moon
+} from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAgentChatStore } from '../../stores/agentChatStore';
@@ -26,12 +29,13 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { key: 'home', label: '首页', to: '/', icon: Home, exact: true },
   { key: 'chat', label: '问股', to: '/chat', icon: MessageSquareQuote, badge: 'completion' },
+  { key: 'pattern', label: 'K线', to: '/pattern', icon: CandlestickChart },
   { key: 'select', label: '选股', to: '/select', icon: TrendingUp },
   { key: 'buy', label: '买入', to: '/buy', icon: ArrowUpCircle },
   { key: 'sell', label: '卖出', to: '/sell', icon: ArrowDownCircle },
+  { key: 'race_open', label: '早盘', to: '/race_open', icon: Sun },
+  { key: 'race_close', label: '尾盘', to: '/race_close', icon: Moon },
   { key: 'limitup', label: '涨停', to: '/limitup', icon: BarChart3 },
-  { key: 'pattern', label: 'K线', to: '/pattern', icon: CandlestickChart },
-  { key: 'settings', label: '设置', to: '/settings', icon: Settings2 },
 ];
 
 export const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed = false, onNavigate }) => {
@@ -97,6 +101,39 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed = false, onNav
             )}
           </NavLink>
         ))}
+
+        {/* Settings */}
+        <NavLink
+          key="settings"
+          to="/settings"
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            cn(
+              'group relative flex items-center gap-3 border-y border-x-0 text-sm transition-all',
+              'h-[var(--nav-item-height)]',
+              collapsed ? 'justify-center px-0' : 'px-[var(--nav-item-padding-x)]',
+              isActive
+                ? 'border-[var(--nav-active-border)] bg-[var(--nav-active-bg)] text-[hsl(var(--primary))] font-medium'
+                : 'border-transparent text-secondary-text hover:bg-[var(--nav-hover-bg)] hover:text-foreground'
+            )
+          }
+        >
+          {({ isActive }) => (
+            <>
+              {isActive && (
+                <motion.div 
+                  layoutId="activeIndicator"
+                  className="absolute top-0 bottom-0 left-0 w-[var(--nav-indicator-width)] bg-[var(--nav-indicator-bg)] shadow-[0_0_10px_var(--nav-indicator-shadow)]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                />
+              )}
+              <Settings2 className={cn('ml-1 h-5 w-5 shrink-0', isActive ? 'text-[var(--nav-icon-active)]' : 'text-current')} />
+              {!collapsed ? <span className="truncate">设置</span> : null}
+            </>
+          )}
+        </NavLink>
       </nav>
 
       <div className="mt-4 mb-2">

@@ -10,8 +10,10 @@
 
 from src.repositories.analysis_repo import AnalysisRepository
 from src.repositories.stock_repo import StockRepository
+from src.repositories.chip_race_repo import ChipRaceRepository
 
 __all__ = [
     "AnalysisRepository",
     "StockRepository",
+    "ChipRaceRepository",
 ]

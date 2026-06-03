@@ -159,6 +159,7 @@ def eastmoney_patch():
                 "fund.eastmoney.com",
                 "push2.eastmoney.com",
                 "push2his.eastmoney.com",
+                "datacenter-web.eastmoney.com",
             ]
         )
         if not is_target:

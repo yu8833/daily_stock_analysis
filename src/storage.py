@@ -720,226 +720,305 @@ class StockSelection(Base):
     
     def __repr__(self):
         return f"<StockSelection(code={self.code}, date={self.date}, name={self.name})>"
+
+
+class StockChipRace(Base):
+    """
+    抢筹数据模型
     
-    def to_dict(self) -> Dict[str, Any]:
-        """转换为字典"""
-        return {
-            'id': self.id,
-            'date': self.date.isoformat() if self.date else None,
-            'code': self.code,
-            'name': self.name,
-            'new_price': self.new_price,
-            'change_rate': self.change_rate,
-            'volume_ratio': self.volume_ratio,
-            'high_price': self.high_price,
-            'low_price': self.low_price,
-            'pre_close_price': self.pre_close_price,
-            'volume': self.volume,
-            'deal_amount': self.deal_amount,
-            'turnoverrate': self.turnoverrate,
-            'amplitude': self.amplitude,
-            'listing_date': self.listing_date.isoformat() if self.listing_date else None,
-            'industry': self.industry,
-            'area': self.area,
-            'concept': self.concept,
-            'style': self.style,
-            'is_hs300': self.is_hs300,
-            'is_sz50': self.is_sz50,
-            'is_zz500': self.is_zz500,
-            'is_zz1000': self.is_zz1000,
-            'is_cy50': self.is_cy50,
-            'pe': self.pe,
-            'pe9': self.pe9,
-            'pbnewmrq': self.pbnewmrq,
-            'pettmdeducted': self.pettmdeducted,
-            'ps9': self.ps9,
-            'pcfjyxjl9': self.pcfjyxjl9,
-            'predict_pe_syear': self.predict_pe_syear,
-            'predict_pe_nyear': self.predict_pe_nyear,
-            'total_market_cap': self.total_market_cap,
-            'free_cap': self.free_cap,
-            'dtsyl': self.dtsyl,
-            'ycpeg': self.ycpeg,
-            'enterprise_value_multiple': self.enterprise_value_multiple,
-            'basic_eps': self.basic_eps,
-            'bvps': self.bvps,
-            'per_netcash_operate': self.per_netcash_operate,
-            'per_fcfe': self.per_fcfe,
-            'per_capital_reserve': self.per_capital_reserve,
-            'per_unassign_profit': self.per_unassign_profit,
-            'per_surplus_reserve': self.per_surplus_reserve,
-            'per_retained_earning': self.per_retained_earning,
-            'parent_netprofit': self.parent_netprofit,
-            'deduct_netprofit': self.deduct_netprofit,
-            'total_operate_income': self.total_operate_income,
-            'roe_weight': self.roe_weight,
-            'jroa': self.jroa,
-            'roic': self.roic,
-            'zxgxl': self.zxgxl,
-            'sale_gpr': self.sale_gpr,
-            'sale_npr': self.sale_npr,
-            'netprofit_yoy_ratio': self.netprofit_yoy_ratio,
-            'deduct_netprofit_growthrate': self.deduct_netprofit_growthrate,
-            'toi_yoy_ratio': self.toi_yoy_ratio,
-            'netprofit_growthrate_3y': self.netprofit_growthrate_3y,
-            'income_growthrate_3y': self.income_growthrate_3y,
-            'predict_netprofit_ratio': self.predict_netprofit_ratio,
-            'predict_income_ratio': self.predict_income_ratio,
-            'basiceps_yoy_ratio': self.basiceps_yoy_ratio,
-            'total_profit_growthrate': self.total_profit_growthrate,
-            'operate_profit_growthrate': self.operate_profit_growthrate,
-            'debt_asset_ratio': self.debt_asset_ratio,
-            'equity_ratio': self.equity_ratio,
-            'equity_multiplier': self.equity_multiplier,
-            'current_ratio': self.current_ratio,
-            'speed_ratio': self.speed_ratio,
-            'total_shares': self.total_shares,
-            'free_shares': self.free_shares,
-            'holder_newest': self.holder_newest,
-            'holder_ratio': self.holder_ratio,
-            'hold_amount': self.hold_amount,
-            'avg_hold_num': self.avg_hold_num,
-            'holdnum_growthrate_3q': self.holdnum_growthrate_3q,
-            'holdnum_growthrate_hy': self.holdnum_growthrate_hy,
-            'hold_ratio_count': self.hold_ratio_count,
-            'free_hold_ratio': self.free_hold_ratio,
-            'macd_golden_fork': self.macd_golden_fork,
-            'macd_golden_forkz': self.macd_golden_forkz,
-            'macd_golden_forky': self.macd_golden_forky,
-            'kdj_golden_fork': self.kdj_golden_fork,
-            'kdj_golden_forkz': self.kdj_golden_forkz,
-            'kdj_golden_forky': self.kdj_golden_forky,
-            'break_through': self.break_through,
-            'low_funds_inflow': self.low_funds_inflow,
-            'high_funds_outflow': self.high_funds_outflow,
-            'breakup_ma_5days': self.breakup_ma_5days,
-            'breakup_ma_10days': self.breakup_ma_10days,
-            'breakup_ma_20days': self.breakup_ma_20days,
-            'breakup_ma_30days': self.breakup_ma_30days,
-            'breakup_ma_60days': self.breakup_ma_60days,
-            'long_avg_array': self.long_avg_array,
-            'short_avg_array': self.short_avg_array,
-            'upper_large_volume': self.upper_large_volume,
-            'down_narrow_volume': self.down_narrow_volume,
-            'one_dayang_line': self.one_dayang_line,
-            'two_dayang_lines': self.two_dayang_lines,
-            'rise_sun': self.rise_sun,
-            'power_fulgun': self.power_fulgun,
-            'restore_justice': self.restore_justice,
-            'down_7days': self.down_7days,
-            'upper_8days': self.upper_8days,
-            'upper_9days': self.upper_9days,
-            'upper_4days': self.upper_4days,
-            'heaven_rule': self.heaven_rule,
-            'upside_volume': self.upside_volume,
-            'bearish_engulfing': self.bearish_engulfing,
-            'reversing_hammer': self.reversing_hammer,
-            'shooting_star': self.shooting_star,
-            'evening_star': self.evening_star,
-            'first_dawn': self.first_dawn,
-            'pregnant': self.pregnant,
-            'black_cloud_tops': self.black_cloud_tops,
-            'morning_star': self.morning_star,
-            'narrow_finish': self.narrow_finish,
-            'limited_lift_f6m': self.limited_lift_f6m,
-            'limited_lift_f1y': self.limited_lift_f1y,
-            'limited_lift_6m': self.limited_lift_6m,
-            'limited_lift_1y': self.limited_lift_1y,
-            'directional_seo_1m': self.directional_seo_1m,
-            'directional_seo_3m': self.directional_seo_3m,
-            'directional_seo_6m': self.directional_seo_6m,
-            'directional_seo_1y': self.directional_seo_1y,
-            'recapitalize_1m': self.recapitalize_1m,
-            'recapitalize_3m': self.recapitalize_3m,
-            'recapitalize_6m': self.recapitalize_6m,
-            'recapitalize_1y': self.recapitalize_1y,
-            'equity_pledge_1m': self.equity_pledge_1m,
-            'equity_pledge_3m': self.equity_pledge_3m,
-            'equity_pledge_6m': self.equity_pledge_6m,
-            'equity_pledge_1y': self.equity_pledge_1y,
-            'pledge_ratio': self.pledge_ratio,
-            'goodwill_scale': self.goodwill_scale,
-            'goodwill_assets_ratro': self.goodwill_assets_ratro,
-            'predict_type': self.predict_type,
-            'par_dividend_pretax': self.par_dividend_pretax,
-            'par_dividend': self.par_dividend,
-            'par_it_equity': self.par_it_equity,
-            'holder_change_3m': self.holder_change_3m,
-            'executive_change_3m': self.executive_change_3m,
-            'org_survey_3m': self.org_survey_3m,
-            'org_rating': self.org_rating,
-            'allcorp_num': self.allcorp_num,
-            'allcorp_fund_num': self.allcorp_fund_num,
-            'allcorp_qs_num': self.allcorp_qs_num,
-            'allcorp_qfii_num': self.allcorp_qfii_num,
-            'allcorp_bx_num': self.allcorp_bx_num,
-            'allcorp_sb_num': self.allcorp_sb_num,
-            'allcorp_xt_num': self.allcorp_xt_num,
-            'allcorp_ratio': self.allcorp_ratio,
-            'allcorp_fund_ratio': self.allcorp_fund_ratio,
-            'allcorp_qs_ratio': self.allcorp_qs_ratio,
-            'allcorp_qfii_ratio': self.allcorp_qfii_ratio,
-            'allcorp_bx_ratio': self.allcorp_bx_ratio,
-            'allcorp_sb_ratio': self.allcorp_sb_ratio,
-            'allcorp_xt_ratio': self.allcorp_xt_ratio,
-            'popularity_rank': self.popularity_rank,
-            'rank_change': self.rank_change,
-            'upp_days': self.upp_days,
-            'down_days': self.down_days,
-            'new_high': self.new_high,
-            'new_down': self.new_down,
-            'newfans_ratio': self.newfans_ratio,
-            'bigfans_ratio': self.bigfans_ratio,
-            'concern_rank_7days': self.concern_rank_7days,
-            'browse_rank': self.browse_rank,
-            'is_issue_break': self.is_issue_break,
-            'is_bps_break': self.is_bps_break,
-            'now_newhigh': self.now_newhigh,
-            'now_newlow': self.now_newlow,
-            'high_recent_3days': self.high_recent_3days,
-            'high_recent_5days': self.high_recent_5days,
-            'high_recent_10days': self.high_recent_10days,
-            'high_recent_20days': self.high_recent_20days,
-            'high_recent_30days': self.high_recent_30days,
-            'low_recent_3days': self.low_recent_3days,
-            'low_recent_5days': self.low_recent_5days,
-            'low_recent_10days': self.low_recent_10days,
-            'low_recent_20days': self.low_recent_20days,
-            'low_recent_30days': self.low_recent_30days,
-            'win_market_3days': self.win_market_3days,
-            'win_market_5days': self.win_market_5days,
-            'win_market_10days': self.win_market_10days,
-            'win_market_20days': self.win_market_20days,
-            'win_market_30days': self.win_market_30days,
-            'net_inflow': self.net_inflow,
-            'netinflow_3days': self.netinflow_3days,
-            'netinflow_5days': self.netinflow_5days,
-            'nowinterst_ratio': self.nowinterst_ratio,
-            'nowinterst_ratio_3d': self.nowinterst_ratio_3d,
-            'nowinterst_ratio_5d': self.nowinterst_ratio_5d,
-            'ddx': self.ddx,
-            'ddx_3d': self.ddx_3d,
-            'ddx_5d': self.ddx_5d,
-            'ddx_red_10d': self.ddx_red_10d,
-            'changerate_3days': self.changerate_3days,
-            'changerate_5days': self.changerate_5days,
-            'changerate_10days': self.changerate_10days,
-            'changerate_ty': self.changerate_ty,
-            'upnday': self.upnday,
-            'downnday': self.downnday,
-            'listing_yield_year': self.listing_yield_year,
-            'listing_volatility_year': self.listing_volatility_year,
-            'mutual_netbuy_amt': self.mutual_netbuy_amt,
-            'hold_ratio': self.hold_ratio,
-            'ma5': self.ma5,
-            'ma10': self.ma10,
-            'ma20': self.ma20,
-            'ma60': self.ma60,
-            'ma120': self.ma120,
-            'ma250': self.ma250,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-        }
+    存储早盘抢筹和尾盘抢筹数据
+    """
+    __tablename__ = 'stock_chip_race'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    code = Column(String(10), nullable=False, index=True)
+    name = Column(String(50))
+    date = Column(Date, nullable=False, index=True)
+    period = Column(Integer, nullable=False)  # 0=早盘, 1=尾盘
+    
+    latest_price = Column(Float)
+    change_pct = Column(Float)
+    prev_close = Column(Float)
+    open_price = Column(Float)
+    amount = Column(Float)
+    race_amount = Column(Float)
+    race_ratio = Column(Float)
+    race_pct = Column(Float)
+    board_days = Column(Integer)
+    board_type = Column(String(20))
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('code', 'date', 'period', name='uix_chip_race_code_date_period'),
+    )
+    
+    def __repr__(self):
+        return f"<StockChipRace(code={self.code}, date={self.date}, period={self.period})>"
+
+
+class StockFundFlow(Base):
+    """
+    个股资金流向模型
+    """
+    __tablename__ = 'stock_fund_flow'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    code = Column(String(10), nullable=False, index=True)
+    name = Column(String(50))
+    date = Column(Date, nullable=False, index=True)
+    indicator = Column(String(10))  # 今日/3日/5日/10日
+    
+    latest_price = Column(Float)
+    change_pct = Column(Float)
+    main_inflow = Column(Float)
+    main_inflow_ratio = Column(Float)
+    large_inflow = Column(Float)
+    large_inflow_ratio = Column(Float)
+    big_inflow = Column(Float)
+    big_inflow_ratio = Column(Float)
+    medium_inflow = Column(Float)
+    medium_inflow_ratio = Column(Float)
+    small_inflow = Column(Float)
+    small_inflow_ratio = Column(Float)
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('code', 'date', 'indicator', name='uix_fund_flow_code_date_indicator'),
+    )
+    
+    def __repr__(self):
+        return f"<StockFundFlow(code={self.code}, date={self.date}, indicator={self.indicator})>"
+
+
+class SectorFundFlow(Base):
+    """
+    板块资金流向模型
+    
+    支持行业、概念、地域资金流向
+    """
+    __tablename__ = 'sector_fund_flow'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    name = Column(String(100), nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+    sector_type = Column(String(20))  # 行业/概念/地域
+    indicator = Column(String(10))  # 今日/5日/10日
+    
+    change_pct = Column(Float)
+    main_inflow = Column(Float)
+    main_inflow_ratio = Column(Float)
+    large_inflow = Column(Float)
+    large_inflow_ratio = Column(Float)
+    big_inflow = Column(Float)
+    big_inflow_ratio = Column(Float)
+    medium_inflow = Column(Float)
+    medium_inflow_ratio = Column(Float)
+    small_inflow = Column(Float)
+    small_inflow_ratio = Column(Float)
+    top_stock = Column(String(50))
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('name', 'date', 'sector_type', 'indicator', name='uix_sector_fund_flow_key'),
+        Index('ix_sector_fund_flow_type', 'sector_type'),
+    )
+    
+    def __repr__(self):
+        return f"<SectorFundFlow(name={self.name}, date={self.date}, sector_type={self.sector_type})>"
+
+
+class StockBonus(Base):
+    """
+    股票分红配送模型
+    """
+    __tablename__ = 'stock_bonus'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    code = Column(String(10), nullable=False, index=True)
+    name = Column(String(50))
+    year = Column(String(10))
+    bonus_plan = Column(String(255))
+    bonus_shares = Column(Float)
+    transfer_shares = Column(Float)
+    dividend = Column(Float)
+    progress = Column(String(50))
+    record_date = Column(Date)
+    ex_date = Column(Date)
+    listing_date = Column(Date)
+    dividend_date = Column(Date)
+    
+    eps = Column(Float)
+    navps = Column(Float)
+    reserve = Column(Float)
+    undistributed = Column(Float)
+    roe = Column(Float)
+    latest_price = Column(Float)
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('code', 'year', name='uix_bonus_code_year'),
+        Index('ix_bonus_code', 'code'),
+    )
+    
+    def __repr__(self):
+        return f"<StockBonus(code={self.code}, year={self.year})>"
+
+
+class StockLhb(Base):
+    """
+    龙虎榜上榜股票模型
+    """
+    __tablename__ = 'stock_lhb'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    code = Column(String(10), nullable=False, index=True)
+    name = Column(String(50))
+    date = Column(Date, nullable=False, index=True)
+    
+    latest_price = Column(Float)
+    change_pct = Column(Float)
+    net_buy = Column(Float)
+    turnover = Column(Float)
+    buy_amount = Column(Float)
+    buy_ratio = Column(Float)
+    sell_amount = Column(Float)
+    sell_ratio = Column(Float)
+    turnover_rate = Column(Float)
+    amplitude = Column(Float)
+    circulating_market_cap = Column(Float)
+    total_market_cap = Column(Float)
+    reason = Column(String(255))
+    times = Column(Integer)
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('code', 'date', name='uix_lhb_code_date'),
+    )
+    
+    def __repr__(self):
+        return f"<StockLhb(code={self.code}, date={self.date})>"
+
+
+class LhbDetail(Base):
+    """
+    龙虎榜详细数据模型（买卖席位）
+    """
+    __tablename__ = 'lhb_detail'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    code = Column(String(10), nullable=False, index=True)
+    name = Column(String(50))
+    date = Column(Date, nullable=False, index=True)
+    seat_name = Column(String(100), nullable=False)
+    trade_type = Column(String(10))  # 买入/卖出
+    buy_amount = Column(Float)
+    sell_amount = Column(Float)
+    ratio = Column(Float)
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('code', 'date', 'seat_name', name='uix_lhb_detail_key'),
+    )
+    
+    def __repr__(self):
+        return f"<LhbDetail(code={self.code}, date={self.date}, seat_name={self.seat_name})>"
+
+
+class StockBlockTrade(Base):
+    """
+    大宗交易数据模型
+    """
+    __tablename__ = 'stock_block_trade'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    code = Column(String(10), nullable=False, index=True)
+    name = Column(String(50))
+    date = Column(Date, nullable=False, index=True)
+    
+    latest_price = Column(Float)
+    change_pct = Column(Float)
+    deal_price = Column(Float)
+    volume = Column(Float)
+    amount = Column(Float)
+    discount = Column(Float)
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('code', 'date', 'deal_price', 'volume', name='uix_block_trade_key'),
+    )
+    
+    def __repr__(self):
+        return f"<StockBlockTrade(code={self.code}, date={self.date})>"
+
+
+class EtfSpot(Base):
+    """
+    ETF行情数据模型
+    """
+    __tablename__ = 'etf_spot'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    code = Column(String(10), nullable=False, index=True)
+    name = Column(String(50))
+    date = Column(Date, nullable=False, index=True)
+    
+    latest_price = Column(Float)
+    change_pct = Column(Float)
+    nav = Column(Float)
+    nav_date = Column(Date)
+    volume = Column(Float)
+    amount = Column(Float)
+    premium = Column(Float)
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('code', 'date', name='uix_etf_spot_code_date'),
+    )
+    
+    def __repr__(self):
+        return f"<EtfSpot(code={self.code}, date={self.date})>"
+
+
+class EtfNav(Base):
+    """
+    ETF净值数据模型
+    """
+    __tablename__ = 'etf_nav'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    code = Column(String(10), nullable=False, index=True)
+    name = Column(String(50))
+    date = Column(Date, nullable=False, index=True)
+    
+    unit_nav = Column(Float)
+    cumulative_nav = Column(Float)
+    daily_return = Column(Float)
+    
+    created_at = Column(DateTime, default=datetime.now)
+    
+    __table_args__ = (
+        UniqueConstraint('code', 'date', name='uix_etf_nav_code_date'),
+    )
+    
+    def __repr__(self):
+        return f"<EtfNav(code={self.code}, date={self.date})>"
 
 
 class _DatabaseManagerMeta(type):

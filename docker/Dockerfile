@@ -60,7 +60,10 @@ RUN groupadd -g 1000 dsa && \
 COPY requirements.txt .
 
 # 安装 Python 依赖
-RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
+RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt && \
+    # 修复 efinance 数据目录权限问题
+    mkdir -p /usr/local/lib/python3.11/site-packages/efinance/data && \
+    chown -R dsa:dsa /usr/local/lib/python3.11/site-packages/efinance
 
 # 复制应用代码
 COPY *.py ./

@@ -722,42 +722,6 @@ class StockSelection(Base):
         return f"<StockSelection(code={self.code}, date={self.date}, name={self.name})>"
 
 
-class StockChipRace(Base):
-    """
-    抢筹数据模型
-    
-    存储早盘抢筹和尾盘抢筹数据
-    """
-    __tablename__ = 'stock_chip_race'
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    
-    code = Column(String(10), nullable=False, index=True)
-    name = Column(String(50))
-    date = Column(Date, nullable=False, index=True)
-    period = Column(Integer, nullable=False)  # 0=早盘, 1=尾盘
-    
-    latest_price = Column(Float)
-    change_pct = Column(Float)
-    prev_close = Column(Float)
-    open_price = Column(Float)
-    amount = Column(Float)
-    race_amount = Column(Float)
-    race_ratio = Column(Float)
-    race_pct = Column(Float)
-    board_days = Column(Integer)
-    board_type = Column(String(20))
-    
-    created_at = Column(DateTime, default=datetime.now)
-    
-    __table_args__ = (
-        UniqueConstraint('code', 'date', 'period', name='uix_chip_race_code_date_period'),
-    )
-    
-    def __repr__(self):
-        return f"<StockChipRace(code={self.code}, date={self.date}, period={self.period})>"
-
-
 class StockFundFlow(Base):
     """
     个股资金流向模型

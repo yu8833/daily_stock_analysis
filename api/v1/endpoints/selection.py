@@ -10,7 +10,7 @@
 """
 
 import logging
-from datetime import date as DateType, datetime
+from datetime import date as DateType, datetime, timedelta
 from typing import Optional, Dict, List
 import re
 
@@ -18,6 +18,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 
 from api.v1.schemas.common import ErrorResponse
 from src.repositories.selection_repo import SelectionRepository
+from src.repositories.stock_repo import StockRepository
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +80,7 @@ def _regex_match(text: str, pattern: str) -> bool:
         500: {"description": "服务器错误", "model": ErrorResponse},
     },
     summary="获取选股数据",
-    description="获取综合选股数据，支持按行业、概念、基本面指标筛选"
+    description="获取综合选股数据，支持按行业、概念、基本面指标筛选，支持Wind体系选股剔除清单"
 )
 def get_selection_data(
     request: Request,
@@ -106,6 +107,16 @@ def get_selection_data(
     max_market_cap: Optional[float] = Query(None, description="最大市值（亿）"),
     is_hs300: Optional[bool] = Query(None, description="是否沪深300成分股"),
     is_sz50: Optional[bool] = Query(None, description="是否上证50成分股"),
+    
+    # Wind体系选股剔除清单参数
+    wind_filter_st: Optional[bool] = Query(False, description="是否剔除ST/*ST股票"),
+    wind_filter_new_stock: Optional[int] = Query(0, description="剔除上市天数少于N天的次新股（0=不剔除，120=6个月，60=3个月）"),
+    wind_min_avg_volume: Optional[float] = Query(0, description="最小20日日均成交额（万元），0=不限制，5000=中长线，3000=短线"),
+    wind_min_price: Optional[float] = Query(0, description="最小收盘价（元），0=不限制，1=面值退市预警，3=低价股"),
+    wind_filter_bvps_neg: Optional[bool] = Query(False, description="是否剔除净资产为负的股票"),
+    wind_filter_pledge_high: Optional[bool] = Query(False, description="是否剔除控股股东质押率>60%的股票"),
+    wind_filter_high_debt: Optional[bool] = Query(False, description="是否剔除资产负债率>85%的股票（非金融）"),
+    wind_filter_high_goodwill: Optional[bool] = Query(False, description="是否剔除商誉/净资产>30%的股票"),
 ):
     """
     获取选股数据
@@ -255,6 +266,65 @@ def get_selection_data(
         
         if is_sz50 is not None:
             results = [r for r in results if str(r.is_sz50).strip() == ('Y' if is_sz50 else 'N')]
+        
+        # ========== Wind体系选股剔除清单 ==========
+        
+        # 一、交易属性剔除
+        
+        # 1. 剔除ST/*ST股票
+        if wind_filter_st:
+            filtered = []
+            for r in results:
+                name = getattr(r, 'name', None)
+                if name:
+                    name_str = str(name).strip()
+                    if not (name_str.startswith('*ST') or name_str.startswith('ST')):
+                        filtered.append(r)
+            results = filtered
+        
+        # 2. 剔除次新股（上市未满N天）
+        if wind_filter_new_stock > 0 and query_date:
+            filtered = []
+            for r in results:
+                if r.listing_date:
+                    try:
+                        listing_date = r.listing_date
+                        if isinstance(listing_date, str):
+                            listing_date = datetime.strptime(listing_date, '%Y-%m-%d').date()
+                        if (query_date - listing_date).days >= wind_filter_new_stock:
+                            filtered.append(r)
+                    except:
+                        filtered.append(r)
+            results = filtered
+        
+        # 3. 低流动性剔除（当日成交额，作为日均成交额的替代）
+        if wind_min_avg_volume > 0:
+            results = [r for r in results if r.deal_amount is not None and r.deal_amount >= wind_min_avg_volume * 10000]
+        
+        # 4. 低价股剔除（收盘价）
+        if wind_min_price > 0:
+            results = [r for r in results if r.new_price is not None and r.new_price >= wind_min_price]
+        
+        # 二、基本面财务剔除
+        
+        # 1. 剔除净资产为负的股票
+        if wind_filter_bvps_neg:
+            results = [r for r in results if r.bvps is not None and r.bvps >= 0]
+        
+        # 2. 剔除高负债股票（资产负债率>85%，非金融）
+        if wind_filter_high_debt:
+            results = [r for r in results if r.debt_asset_ratio is None or r.debt_asset_ratio <= 85]
+        
+        # 3. 剔除高商誉股票（商誉/净资产>30%）
+        if wind_filter_high_goodwill:
+            results = [r for r in results if r.goodwill_assets_ratro is None or r.goodwill_assets_ratro <= 30]
+        
+        # 三、股权&筹码利空剔除
+        
+        # 1. 剔除控股股东高质押率股票（质押率>60%）
+        if wind_filter_pledge_high:
+            results = [r for r in results if r.pledge_ratio is None or r.pledge_ratio <= 60]
+        
         
         # 关键字过滤（支持正则表达式）
         if keyword:
@@ -454,13 +524,35 @@ def get_selection_data(
         paginated_results = results[start_idx:end_idx]
         
         formatted_data = []
+        stock_repo = StockRepository()
+        
         for item in paginated_results:
+            stock_code = str(item.code).strip()
+            
+            ma5 = ma8 = ma13 = ma60 = bias60 = None
+            
+            try:
+                daily_data = stock_repo.get_range(stock_code, query_date - timedelta(days=120), query_date)
+                
+                if len(daily_data) >= 5:
+                    prices = [d.close for d in daily_data]
+                    
+                    ma5 = round(sum(prices[-5:]) / 5, 2)
+                    ma8 = round(sum(prices[-8:]) / 8, 2) if len(prices) >= 8 else None
+                    ma13 = round(sum(prices[-13:]) / 13, 2) if len(prices) >= 13 else None
+                    ma60 = round(sum(prices[-60:]) / 60, 2) if len(prices) >= 60 else None
+                    
+                    if ma60 and ma60 > 0:
+                        bias60 = round((prices[-1] - ma60) / ma60 * 100, 2)
+            except Exception as e:
+                logger.debug(f"计算 {stock_code} 均线失败: {e}")
+            
             formatted_data.append({
                 # 基本信息
-                "code": str(item.code).strip(),
+                "code": stock_code,
                 "name": str(item.name).strip(),
                 
-                # 行情数据
+                # 行情数据（放在最前面）
                 "new_price": item.new_price,
                 "change_rate": item.change_rate,
                 "volume_ratio": item.volume_ratio,
@@ -471,6 +563,13 @@ def get_selection_data(
                 "deal_amount": item.deal_amount,
                 "turnoverrate": item.turnoverrate,
                 "listing_date": item.listing_date.isoformat() if item.listing_date else None,
+                
+                # 交易信号相关指标（三买三卖系统）
+                "ma5": ma5,
+                "ma8": ma8,
+                "ma13": ma13,
+                "ma60": ma60,
+                "bias60": bias60,
                 
                 # 行业地区概念
                 "industry": str(item.industry).strip() if item.industry else None,
@@ -740,14 +839,6 @@ def get_selection_data(
                 "is_bps_break": str(item.is_bps_break).strip() if item.is_bps_break else None,
                 "now_newhigh": str(item.now_newhigh).strip() if item.now_newhigh else None,
                 "now_newlow": str(item.now_newlow).strip() if item.now_newlow else None,
-                
-                # 均线数据
-                "ma5": item.ma5,
-                "ma10": item.ma10,
-                "ma20": item.ma20,
-                "ma60": item.ma60,
-                "ma120": item.ma120,
-                "ma250": item.ma250,
             })
         
         return {
@@ -1042,3 +1133,4 @@ def refresh_selection_data(
                 "message": f"刷新选股数据失败: {str(e)}"
             }
         )
+

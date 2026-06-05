@@ -11,6 +11,12 @@ import { getTodayIso, getEastMoneyUrl } from '../utils/format';
 interface SelectionStock {
   code: string;
   name: string;
+  // 交易信号相关指标（三买三卖系统）
+  ma5: number | null;
+  ma8: number | null;
+  ma13: number | null;
+  ma60: number | null;
+  bias60: number | null;
   new_price: number | null;
   change_rate: number | null;
   volume_ratio: number | null;
@@ -228,13 +234,14 @@ type SortOrder = 'asc' | 'desc';
 
 const COLUMN_GROUPS = [
   { id: 'basic', label: '基本信息' },
+  { id: 'quotation', label: '行情数据' },
+  { id: 'signal', label: '交易信号' },
   { id: 'kline', label: 'K线形态' },
   { id: 'technical', label: '技术指标' },
   { id: 'performance', label: '近期表现' },
   { id: 'strategy', label: '策略信号' },
   { id: 'events', label: '事件驱动' },
   { id: 'fund_flow', label: '资金流向' },
-  { id: 'quotation', label: '行情数据' },
   { id: 'valuation', label: '估值指标' },
   { id: 'market_cap', label: '市值' },
   { id: 'profitability', label: '盈利能力' },
@@ -259,6 +266,25 @@ const COLUMN_GROUPS = [
 const COLUMN_CONFIG: ColumnConfig<SelectionStock>[] = [
   { key: 'code', label: '代码', width: 'w-16', align: 'left', type: 'text', group: 'basic' },
   { key: 'name', label: '名称', width: 'w-16', align: 'left', type: 'text', group: 'basic' },
+
+  // 行情数据（放在最前面）
+  { key: 'new_price', label: '最新价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'change_rate', label: '涨跌幅', width: 'w-20', align: 'right', type: 'percent', group: 'quotation' },
+  { key: 'volume_ratio', label: '量比', width: 'w-16', align: 'right', type: 'number', group: 'quotation' },
+  { key: 'high_price', label: '最高价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'low_price', label: '最低价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'pre_close_price', label: '昨收', width: 'w-16', align: 'right', type: 'price', group: 'quotation' },
+  { key: 'volume', label: '成交量', width: 'w-24', align: 'right', type: 'number', group: 'quotation' },
+  { key: 'deal_amount', label: '成交额', width: 'w-24', align: 'right', type: 'money', group: 'quotation' },
+  { key: 'turnoverrate', label: '换手率', width: 'w-20', align: 'right', type: 'percent', group: 'quotation' },
+  { key: 'amplitude', label: '振幅', width: 'w-16', align: 'right', type: 'percent', group: 'quotation' },
+
+  // 三买三卖系统指标
+  { key: 'ma5', label: 'MA5', width: 'w-14', align: 'right', type: 'price', group: 'signal' },
+  { key: 'ma8', label: 'MA8', width: 'w-14', align: 'right', type: 'price', group: 'signal' },
+  { key: 'ma13', label: 'MA13', width: 'w-16', align: 'right', type: 'price', group: 'signal' },
+  { key: 'ma60', label: 'MA60', width: 'w-16', align: 'right', type: 'price', group: 'signal' },
+  { key: 'bias60', label: 'BIAS(60)', width: 'w-20', align: 'right', type: 'percent', group: 'signal' },
 
   { key: 'predict_type', label: '业绩预告', width: 'w-18', align: 'center', type: 'text', group: 'special' },
   { key: 'is_issue_break', label: '破发', width: 'w-14', align: 'center', type: 'flag', group: 'special' },
@@ -357,17 +383,6 @@ const COLUMN_CONFIG: ColumnConfig<SelectionStock>[] = [
   { key: 'industry', label: '行业', width: 'w-24', align: 'left', type: 'text', group: 'market' },
   { key: 'area', label: '地区', width: 'w-16', align: 'left', type: 'text', group: 'market' },
   { key: 'concept', label: '概念', width: 'w-32', align: 'left', type: 'text', group: 'market' },
-
-  { key: 'new_price', label: '最新价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
-  { key: 'change_rate', label: '涨跌幅', width: 'w-20', align: 'right', type: 'percent', group: 'quotation' },
-  { key: 'volume_ratio', label: '量比', width: 'w-16', align: 'right', type: 'number', group: 'quotation' },
-  { key: 'high_price', label: '最高价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
-  { key: 'low_price', label: '最低价', width: 'w-20', align: 'right', type: 'price', group: 'quotation' },
-  { key: 'pre_close_price', label: '昨收', width: 'w-16', align: 'right', type: 'price', group: 'quotation' },
-  { key: 'volume', label: '成交量', width: 'w-24', align: 'right', type: 'number', group: 'quotation' },
-  { key: 'deal_amount', label: '成交额', width: 'w-24', align: 'right', type: 'money', group: 'quotation' },
-  { key: 'turnoverrate', label: '换手率', width: 'w-20', align: 'right', type: 'percent', group: 'quotation' },
-  { key: 'amplitude', label: '振幅', width: 'w-16', align: 'right', type: 'percent', group: 'quotation' },
 
   { key: 'pe9', label: 'PE(TTM)', width: 'w-16', align: 'right', type: 'number', group: 'valuation' },
   { key: 'pbnewmrq', label: 'PB(MRQ)', width: 'w-18', align: 'right', type: 'number', group: 'valuation' },

@@ -21,8 +21,8 @@ const SelectionPage = lazy(() => import('./pages/SelectionPage'));
 const BuyPage = lazy(() => import('./pages/BuyPage'));
 const SellPage = lazy(() => import('./pages/SellPage'));
 const PatternPage = lazy(() => import('./pages/PatternPage'));
-const RaceOpenPage = lazy(() => import('./pages/RaceOpenPage'));
-const RaceClosePage = lazy(() => import('./pages/RaceClosePage'));
+const BuySignalsPage = lazy(() => import('./pages/BuySignalsPage'));
+const SellSignalsPage = lazy(() => import('./pages/SellSignalsPage'));
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -85,8 +85,8 @@ const AppContent: React.FC = () => {
         <Route path="/buy" element={<BuyPage />} />
         <Route path="/sell" element={<SellPage />} />
         <Route path="/pattern" element={<PatternPage />} />
-        <Route path="/race_open" element={<RaceOpenPage />} />
-        <Route path="/race_close" element={<RaceClosePage />} />
+        <Route path="/buy_signals" element={<BuySignalsPage />} />
+        <Route path="/sell_signals" element={<SellSignalsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

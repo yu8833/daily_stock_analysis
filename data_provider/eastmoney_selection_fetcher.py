@@ -296,7 +296,7 @@ class EastmoneySelectionFetcher(BaseFetcher):
     def fetch_selection_data(
         self,
         page_size: int = 50,
-        filter_str: str = "(MARKET+in+(\"上交所主板\",\"深交所主板\",\"深交所创业板\"))(NEW_PRICE>0)"
+        filter_str: str = "(MARKET+in+(\"上交所主板\",\"深交所主板\",\"深交所创业板\",\"上交所科创板\",\"北交所\"))(NEW_PRICE>0)"
     ) -> Optional[pd.DataFrame]:
         """
         从东方财富网获取选股器数据
@@ -347,6 +347,10 @@ class EastmoneySelectionFetcher(BaseFetcher):
                 r = self._session.get(url, params=params, timeout=30)
                 r.raise_for_status()
                 data_json = r.json()
+                if data_json is None:
+                    logger.info("[eastmoney] 分页请求返回空响应")
+                    page_count -= 1
+                    continue
                 _data = data_json.get("result", {}).get("data", [])
                 data.extend(_data)
                 page_count -= 1

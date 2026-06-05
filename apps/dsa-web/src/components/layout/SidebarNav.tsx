@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   BarChart3, Home, LogOut, MessageSquareQuote, Settings2, TrendingUp, ArrowUpCircle, 
-  ArrowDownCircle, CandlestickChart, Sun, Moon
+  ArrowDownCircle, CandlestickChart
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -31,10 +31,8 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'chat', label: '问股', to: '/chat', icon: MessageSquareQuote, badge: 'completion' },
   { key: 'pattern', label: 'K线', to: '/pattern', icon: CandlestickChart },
   { key: 'select', label: '选股', to: '/select', icon: TrendingUp },
-  { key: 'buy', label: '买入', to: '/buy', icon: ArrowUpCircle },
-  { key: 'sell', label: '卖出', to: '/sell', icon: ArrowDownCircle },
-  { key: 'race_open', label: '早盘', to: '/race_open', icon: Sun },
-  { key: 'race_close', label: '尾盘', to: '/race_close', icon: Moon },
+  { key: 'buy_signals', label: '买入', to: '/buy_signals', icon: ArrowUpCircle },
+  { key: 'sell_signals', label: '卖出', to: '/sell_signals', icon: ArrowDownCircle },
   { key: 'limitup', label: '涨停', to: '/limitup', icon: BarChart3 },
 ];
 

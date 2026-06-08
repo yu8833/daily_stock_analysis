@@ -3,7 +3,7 @@
 
 name: chan_theory
 display_name: 缠论
-description: 基于缠论笔、线段、中枢结构，判断趋势级别、买卖点与背驰信号。
+description: 缠论是一套完整的价格分析理论。通过识别笔、线段、中枢等结构，判断趋势级别和方向，寻找一买、二买、三买等精准买卖点。背驰是判断转折点的核心信号。
 category: framework
 core_rules: [1, 2, 3, 4]
 required_tools:

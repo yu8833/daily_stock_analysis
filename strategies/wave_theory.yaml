@@ -3,7 +3,7 @@
 
 name: wave_theory
 display_name: 波浪理论
-description: 基于艾略特波浪理论的推动浪与调整浪结构，判断当前所处浪型与潜在目标价。
+description: 波浪理论基于艾略特波浪理论。通过识别5浪推动+3浪调整的循环结构，判断当前所处浪型位置，预测潜在目标价位，为交易决策提供参考。第2浪回调是最安全的买入时机。
 category: framework
 core_rules: [1, 2, 3, 4]
 required_tools:

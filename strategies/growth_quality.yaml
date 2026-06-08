@@ -2,7 +2,7 @@
 
 name: growth_quality
 display_name: 成长质量
-description: 结合收入利润增长、ROE、现金流和行业空间，识别高质量成长股与成长失速风险。
+description: 成长质量策略关注公司的中长期成长能力。通过分析收入利润增长、ROE、现金流质量和行业空间，识别真正的高质量成长股，同时警惕成长失速的风险。适合中长期投资。
 category: framework
 core_rules: [2, 3, 5]
 required_tools:

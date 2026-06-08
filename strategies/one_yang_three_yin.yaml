@@ -3,7 +3,7 @@
 
 name: one_yang_three_yin
 display_name: 一阳夹三阴
-description: 检测一阳夹三阴K线整理形态，趋势延续入场信号。
+description: 一阳夹三阴是经典的K线整理形态。表现为一根大阳线后跟随三根缩量阴线，最后再收一根突破阳线。这表明短期调整结束，趋势有望延续，是较好的入场信号。
 category: pattern
 core_rules: [2, 4]
 required_tools:

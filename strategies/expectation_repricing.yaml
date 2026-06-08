@@ -2,7 +2,7 @@
 
 name: expectation_repricing
 display_name: 预期重估
-description: 分析业绩预期、政策预期和估值预期的变化，寻找预期差修复或预期过热后的回落风险。
+description: 预期重估策略关注市场预期的变化。通过分析业绩预期、政策预期和估值预期的调整，寻找预期差修复的机会，同时警惕预期过热后的回落风险。
 category: framework
 core_rules: [3, 5, 6]
 required_tools:

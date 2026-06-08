@@ -3,7 +3,7 @@
 
 name: bottom_volume
 display_name: 底部放量
-description: 检测长期下跌后底部放量信号，潜在趋势反转信号。
+description: 底部放量是潜在的趋势反转信号。当股价经过长期下跌后，突然出现成交量大幅放大且价格企稳，表明有资金在低位介入，可能预示下跌趋势即将结束。
 category: reversal
 core_rules: [2, 5]
 required_tools:

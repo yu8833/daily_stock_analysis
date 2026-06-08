@@ -11,12 +11,7 @@ import { getTodayIso, getEastMoneyUrl } from '../utils/format';
 interface SelectionStock {
   code: string;
   name: string;
-  // 交易信号相关指标（三买三卖系统）
-  ma5: number | null;
-  ma8: number | null;
-  ma13: number | null;
-  ma60: number | null;
-  bias60: number | null;
+  // 行情数据
   new_price: number | null;
   change_rate: number | null;
   volume_ratio: number | null;
@@ -278,14 +273,7 @@ const COLUMN_CONFIG: ColumnConfig<SelectionStock>[] = [
   { key: 'deal_amount', label: '成交额', width: 'w-24', align: 'right', type: 'money', group: 'quotation' },
   { key: 'turnoverrate', label: '换手率', width: 'w-20', align: 'right', type: 'percent', group: 'quotation' },
   { key: 'amplitude', label: '振幅', width: 'w-16', align: 'right', type: 'percent', group: 'quotation' },
-
-  // 三买三卖系统指标
-  { key: 'ma5', label: 'MA5', width: 'w-14', align: 'right', type: 'price', group: 'signal' },
-  { key: 'ma8', label: 'MA8', width: 'w-14', align: 'right', type: 'price', group: 'signal' },
-  { key: 'ma13', label: 'MA13', width: 'w-16', align: 'right', type: 'price', group: 'signal' },
-  { key: 'ma60', label: 'MA60', width: 'w-16', align: 'right', type: 'price', group: 'signal' },
-  { key: 'bias60', label: 'BIAS(60)', width: 'w-20', align: 'right', type: 'percent', group: 'signal' },
-
+  // 业绩与特殊状态
   { key: 'predict_type', label: '业绩预告', width: 'w-18', align: 'center', type: 'text', group: 'special' },
   { key: 'is_issue_break', label: '破发', width: 'w-14', align: 'center', type: 'flag', group: 'special' },
   { key: 'is_bps_break', label: '破净', width: 'w-14', align: 'center', type: 'flag', group: 'special' },

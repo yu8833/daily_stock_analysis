@@ -3,7 +3,7 @@
 
 name: emotion_cycle
 display_name: 情绪周期
-description: 基于市场情绪、换手率与量价结构，识别情绪低点（恐慌底）与情绪高点（狂热顶），逆情绪布局。
+description: 情绪周期策略基于市场情绪的周期性变化。通过换手率、成交量和新闻情绪等指标，识别情绪低点（恐慌底）和情绪高点（狂热顶），实现"别人恐慌我贪婪，别人贪婪我恐慌"的逆情绪操作。
 category: framework
 core_rules: [1, 2, 3, 5]
 required_tools:

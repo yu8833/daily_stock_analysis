@@ -3,7 +3,7 @@
 
 name: shrink_pullback
 display_name: 缩量回踩
-description: 检测缩量回踩均线支撑信号，趋势延续的理想入场点。
+description: 缩量回踩是趋势交易中的理想入场策略。当股价在上升趋势中回调至均线支撑位，且成交量萎缩时，说明抛压减轻，是低吸买入的好时机。
 category: trend
 core_rules: [1, 2, 4]
 required_tools:

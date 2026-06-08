@@ -2,7 +2,7 @@
 
 name: event_driven
 display_name: 事件驱动
-description: 围绕业绩、政策、并购、订单、产品发布等事件，评估催化强度、兑现概率和风险边界。
+description: 事件驱动策略专注于公司或行业的重大事件分析。围绕业绩发布、政策变动、并购重组、订单中标、产品发布等事件，评估事件的催化强度、兑现概率和风险边界，把握事件带来的交易机会。
 category: framework
 core_rules: [3, 5]
 required_tools:

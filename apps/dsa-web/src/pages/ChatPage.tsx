@@ -1078,21 +1078,6 @@ const ChatPage: React.FC = () => {
                 <span className="text-xs text-muted-text font-medium uppercase tracking-wider flex-shrink-0 mt-1">
                   策略
                 </span>
-                <label className="flex items-center gap-1.5 text-sm cursor-pointer group mt-0.5">
-                  <input
-                    type="checkbox"
-                    name="general-analysis"
-                    value=""
-                    checked={selectedSkillIds.length === 0}
-                    onChange={() => setSelectedSkillIds([])}
-                    className="chat-skill-checkbox"
-                  />
-                  <span
-                    className={`transition-colors text-sm ${selectedSkillIds.length === 0 ? 'text-foreground font-medium' : 'text-secondary-text group-hover:text-foreground'}`}
-                  >
-                    通用分析
-                  </span>
-                </label>
                 {skills.map((s) => {
                   const checked = selectedSkillIdSet.has(s.id);
                   const disabled = !checked && skillLimitReached;

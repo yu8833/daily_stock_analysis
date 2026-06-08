@@ -3,7 +3,7 @@
 
 name: ma_golden_cross
 display_name: 均线金叉
-description: 检测均线金叉配合量能确认信号，经典的趋势反转/延续信号。
+description: 均线金叉是经典的技术分析信号。当短期均线上穿长期均线时，预示趋势可能反转或延续。配合量能放大确认，信号更可靠。适合在上升趋势初期入场。
 category: trend
 core_rules: [1, 2, 3]
 required_tools:

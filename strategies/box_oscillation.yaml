@@ -3,7 +3,7 @@
 
 name: box_oscillation
 display_name: 箱体震荡
-description: 识别价格箱体区间，在箱底买入、箱顶减仓，适用于横盘震荡行情。
+description: 箱体震荡策略适用于横盘整理行情。通过识别价格在阻力位与支撑位之间形成的箱体区间，在箱底支撑位附近买入，在箱顶阻力位附近减仓，进行波段操作。
 category: framework
 core_rules: [1, 2, 3]
 required_tools:

@@ -2,7 +2,7 @@
 
 name: hot_theme
 display_name: 热点题材
-description: 跟踪政策、产业和市场热点，判断题材强度、板块扩散和个股相对强弱。
+description: 热点题材策略专注于市场热点的跟踪与分析。通过判断题材强度、板块扩散程度以及个股在板块中的相对强弱，捕捉热点板块中的强势个股机会。需注意热点退潮风险。
 category: framework
 core_rules: [2, 3, 5, 7]
 required_tools:

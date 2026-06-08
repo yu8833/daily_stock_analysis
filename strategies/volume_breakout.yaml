@@ -3,7 +3,7 @@
 
 name: volume_breakout
 display_name: 放量突破
-description: 检测放量突破阻力位信号。适用于股价接近已知阻力位时。
+description: 放量突破是强势上涨信号。当股价在成交量放大的推动下突破重要阻力位时，表明上涨动力充足，可能开启新的上涨行情。需确认突破有效性，避免假突破。
 category: trend
 core_rules: [1, 2, 3]
 required_tools:

@@ -328,6 +328,10 @@ class EastmoneySelectionFetcher(BaseFetcher):
             r.raise_for_status()
             data_json = r.json()
             
+            if data_json is None:
+                logger.info("[eastmoney] 请求返回空响应")
+                return pd.DataFrame()
+            
             result = data_json.get("result", {})
             data = result.get("data", [])
             

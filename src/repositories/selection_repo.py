@@ -856,6 +856,28 @@ class SelectionRepository:
 
         return results
     
+    def refresh_historical_data(self, query_date: date) -> int:
+        """
+        刷新历史日期的数据（仅用于管理员手动操作）
+        
+        注意：由于数据源限制，历史数据可能与实际当日数据有差异
+        
+        Args:
+            query_date: 查询日期
+            
+        Returns:
+            保存的记录数
+        """
+        today = date.today()
+        if query_date > today:
+            logger.warning(f"无法刷新未来日期 {query_date}")
+            return 0
+            
+        if query_date < today:
+            logger.warning(f"刷新历史日期 {query_date}，但数据源只能获取当日数据")
+        
+        return self.save_from_fetcher(query_date)
+    
     def get_all_industries(self, query_date: Optional[date] = None) -> List[str]:
         """
         获取所有行业列表

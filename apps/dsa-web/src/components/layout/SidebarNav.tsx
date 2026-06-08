@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   BarChart3, Home, LogOut, MessageSquareQuote, Settings2, TrendingUp, ArrowUpCircle, 
-  ArrowDownCircle, CandlestickChart
+  ArrowDownCircle, HelpCircle
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,11 +29,11 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { key: 'home', label: '首页', to: '/', icon: Home, exact: true },
   { key: 'chat', label: '问股', to: '/chat', icon: MessageSquareQuote, badge: 'completion' },
-  { key: 'pattern', label: 'K线', to: '/pattern', icon: CandlestickChart },
   { key: 'select', label: '选股', to: '/select', icon: TrendingUp },
   { key: 'buy_signals', label: '买入', to: '/buy_signals', icon: ArrowUpCircle },
   { key: 'sell_signals', label: '卖出', to: '/sell_signals', icon: ArrowDownCircle },
   { key: 'limitup', label: '涨停', to: '/limitup', icon: BarChart3 },
+  { key: 'help', label: '说明', to: '/help', icon: HelpCircle },
 ];
 
 export const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed = false, onNavigate }) => {

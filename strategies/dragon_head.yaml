@@ -3,7 +3,7 @@
 
 name: dragon_head
 display_name: 龙头策略
-description: 板块轮动中识别龙头股。适用于板块启动或行业催化剂出现时。
+description: 龙头策略专注于识别板块中的领涨龙头股。在板块启动或行业催化剂出现时，率先上涨、跑赢板块的个股通常是龙头，具有更高的上涨弹性和持续性。
 category: trend
 core_rules: [2, 7]
 required_tools:

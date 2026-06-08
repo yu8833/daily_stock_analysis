@@ -529,24 +529,6 @@ def get_selection_data(
         for item in paginated_results:
             stock_code = str(item.code).strip()
             
-            ma5 = ma8 = ma13 = ma60 = bias60 = None
-            
-            try:
-                daily_data = stock_repo.get_range(stock_code, query_date - timedelta(days=120), query_date)
-                
-                if len(daily_data) >= 5:
-                    prices = [d.close for d in daily_data]
-                    
-                    ma5 = round(sum(prices[-5:]) / 5, 2)
-                    ma8 = round(sum(prices[-8:]) / 8, 2) if len(prices) >= 8 else None
-                    ma13 = round(sum(prices[-13:]) / 13, 2) if len(prices) >= 13 else None
-                    ma60 = round(sum(prices[-60:]) / 60, 2) if len(prices) >= 60 else None
-                    
-                    if ma60 and ma60 > 0:
-                        bias60 = round((prices[-1] - ma60) / ma60 * 100, 2)
-            except Exception as e:
-                logger.debug(f"计算 {stock_code} 均线失败: {e}")
-            
             formatted_data.append({
                 # 基本信息
                 "code": stock_code,
@@ -563,13 +545,6 @@ def get_selection_data(
                 "deal_amount": item.deal_amount,
                 "turnoverrate": item.turnoverrate,
                 "listing_date": item.listing_date.isoformat() if item.listing_date else None,
-                
-                # 交易信号相关指标（三买三卖系统）
-                "ma5": ma5,
-                "ma8": ma8,
-                "ma13": ma13,
-                "ma60": ma60,
-                "bias60": bias60,
                 
                 # 行业地区概念
                 "industry": str(item.industry).strip() if item.industry else None,

@@ -2,15 +2,15 @@
 
 # 📈 股票智能分析系统
 
-[![GitHub stars](https://img.shields.io/github/stars/ZhuLinsen/daily_stock_analysis?style=social)](https://github.com/ZhuLinsen/daily_stock_analysis/stargazers)
-[![CI](https://github.com/ZhuLinsen/daily_stock_analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/ZhuLinsen/daily_stock_analysis/actions/workflows/ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/yu8833/daily_stock_analysis?style=social)](https://github.com/yu8833/daily_stock_analysis/stargazers)
+[![CI](https://github.com/yu8833/daily_stock_analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/yu8833/daily_stock_analysis/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Ready-2088FF?logo=github-actions&logoColor=white)](https://github.com/features/actions)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/zhulinsen/daily_stock_analysis)
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/18527" target="_blank"><img src="https://trendshift.io/api/badge/repositories/18527" alt="ZhuLinsen%2Fdaily_stock_analysis | Trendshift" width="230" /></a>&nbsp;<a href="https://hellogithub.com/repository/ZhuLinsen/daily_stock_analysis" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=6daa16e405ce46ed97b4a57706aeb29f&claim_uid=pfiJMqhR9uvDGlT&theme=neutral" alt="Featured｜HelloGitHub" width="230" /></a>
+  <a href="https://trendshift.io/repositories/18527" target="_blank"><img src="https://trendshift.io/api/badge/repositories/18527" alt="yu8833%2Fdaily_stock_analysis | Trendshift" width="230" /></a>&nbsp;<a href="https://hellogithub.com/repository/ZhuLinsen/daily_stock_analysis" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=6daa16e405ce46ed97b4a57706aeb29f&claim_uid=pfiJMqhR9uvDGlT&theme=neutral" alt="Featured｜HelloGitHub" width="230" /></a>
 </p>
 
 > 🤖 基于 AI 大模型的 A股/港股/美股自选股智能分析系统，每日自动分析并推送「决策仪表盘」到企业微信/飞书/Telegram/Discord/Slack/邮箱
@@ -43,7 +43,7 @@
 | AI 决策报告 | 核心结论、评分、趋势、买卖点位、风险警报、催化因素、操作检查清单 |
 | 多市场数据聚合 | A股、港股、美股、ETF；行情、K 线、技术指标、资金流、筹码、新闻、公告和基本面 |
 | Web / 桌面工作台 | 手动分析、任务进度、历史报告、完整 Markdown、回测、持仓、配置管理、浅色 / 深色主题 |
-| Agent 策略问股 | 多轮追问，支持均线、缠论、波浪、趋势、热点、事件、成长、预期等 15 种内置策略，覆盖 Web/Bot/API |
+| Agent 策略问股 | 多轮追问，支持**全面分析**、均线金叉、缠论、波浪、趋势、热点、事件、成长、预期等 16 种内置策略，覆盖 Web/Bot/API |
 | 智能导入与补全 | 图片、CSV/Excel、剪贴板导入；股票代码/名称/拼音/别名补全 |
 | 自动化与推送 | GitHub Actions、Docker、本地定时任务、FastAPI 服务和企业微信/飞书/Telegram/Discord/Slack/邮件推送 |
 
@@ -141,7 +141,7 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/ZhuLinsen/daily_stock_analysis.git && cd daily_stock_analysis
+git clone https://github.com/yu8833/daily_stock_analysis.git && cd daily_stock_analysis
 
 # 安装依赖
 pip install -r requirements.txt
@@ -228,13 +228,45 @@ python main.py --webui
 python main.py --webui-only
 ```
 
-访问 `http://127.0.0.1:8000` 即可使用。认证、智能导入、搜索补全、历史报告复制、云服务器访问等细节见 [本地 WebUI 管理界面](docs/full-guide.md#本地-webui-管理界面)。
+访问 `http://127.0.0.1:8000` 即可使用。
+
+### Web 页面路由
+
+| 页面 | 路径 | 说明 |
+|------|------|------|
+| 首页 | `/` | 仪表盘概览 |
+| 问股 | `/chat` | AI 策略问股（支持 16 种策略） |
+| 选股 | `/select` | 多策略智能选股 |
+| 买入信号 | `/buy_signals` | 实时买入信号 |
+| 卖出信号 | `/sell_signals` | 实时卖出信号 |
+| 涨停 | `/limitup` | 每日涨停分析 |
+| 说明 | `/help` | 系统功能说明 |
+| 设置 | `/settings` | 配置管理 |
 
 ## 🤖 Agent 策略问股
 
 配置任意可用 AI API Key 后，Web `/chat` 页面即可使用策略问股；如需显式关闭可设置 `AGENT_MODE=false`。
 
-- 支持均线金叉、缠论、波浪理论、多头趋势、热点题材、事件驱动、成长质量、预期重估等内置策略
+### 内置策略（16 种）
+
+| 策略 | 说明 |
+|------|------|
+| **全面分析** | 默认策略，整合所有专业分析方法，覆盖宏观、行业、基本面、技术面、资金情绪、事件驱动六大维度 |
+| 均线金叉 | 经典技术信号，短期均线上穿长期均线预示趋势反转或延续 |
+| 放量突破 | 强势上涨信号，成交量放大推动股价突破阻力位 |
+| 热点题材 | 跟踪市场热点，判断题材强度和个股相对强弱 |
+| 缩量回踩 | 趋势交易理想入场策略，股价回调至均线支撑且成交量萎缩时低吸 |
+| 事件驱动 | 围绕业绩、政策、并购、订单等事件，评估催化强度和风险边界 |
+| 箱体震荡 | 横盘整理行情适用，箱底买入、箱顶减仓 |
+| 成长质量 | 关注中长期成长能力，分析收入利润增长、ROE、现金流 |
+| 底部放量 | 潜在趋势反转信号，长期下跌后放量企稳 |
+| 预期重估 | 分析业绩、政策、估值预期变化，寻找预期差修复机会 |
+| 缠论 | 基于笔、线段、中枢结构判断趋势级别 |
+| 波浪理论 | 识别5浪推动+3浪调整结构 |
+| 龙头策略 | 识别板块领涨龙头股 |
+| 情绪周期 | 逆情绪操作，识别恐慌底和狂热顶 |
+| 一阳夹三阴 | K线整理形态，大阳线后缩量调整再突破 |
+
 - 支持实时行情、K 线、技术指标、新闻和风险信息调用
 - 支持多轮追问、会话导出、发送到通知渠道和后台执行
 - 支持自定义策略文件与多 Agent 编排（实验性）
@@ -270,13 +302,13 @@ python main.py --webui-only
   </tr>
   <tr>
     <td width="92" valign="top"><strong>问题反馈</strong></td>
-    <td valign="top"><a href="https://github.com/ZhuLinsen/daily_stock_analysis/issues">提交 Issue</a></td>
+    <td valign="top"><a href="https://github.com/yu8833/daily_stock_analysis/issues">提交 Issue</a></td>
   </tr>
 </table>
 
 ## 📄 License
 
-[MIT License](LICENSE) © 2026 ZhuLinsen
+[MIT License](LICENSE) © 2026
 
 欢迎在二次开发或引用时注明本仓库来源，感谢支持项目持续维护。
 
